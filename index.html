@@ -1,57 +1,31 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Habits</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Habits</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" href="icon.png"> <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
-  <header class="topbar">
-    <h1>Habits</h1>
-    <button id="reloadBtn" class="iconBtn" title="Reload">↻</button>
-  </header>
+    <div class="container">
+        <header>
+            <h1>Habits</h1>
+            <button id="menuBtn">☰</button>
+        </header>
 
-  <main class="container">
-    <section class="card">
-      <div class="weekbar">
-        <button id="prevWeek" class="iconBtn" title="Previous week">‹</button>
-        <div class="weekTitle" id="weekTitle"></div>
-        <button id="nextWeek" class="iconBtn" title="Next week">›</button>
-      </div>
+        <div id="week-header" class="days-row">
+            <div class="habit-name-spacer"></div>
+            </div>
 
-      <div id="grid" class="gridWrap"></div>
-    </section>
+        <div id="habits-list">
+            </div>
 
-    <section class="card">
-      <h2>Add habit</h2>
-      <div class="row">
-        <input id="newHabit" type="text" placeholder="e.g., Reading" />
-        <button id="addHabitBtn" class="primary">Add</button>
-      </div>
-      <p class="hint">Tip: tap on a cell to toggle ✓.</p>
-    </section>
-
-    <section class="card">
-      <details>
-        <summary>Settings</summary>
-        <div class="row">
-          <label class="lbl">API URL</label>
-          <input id="apiUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec" />
+        <div class="actions">
+            <input type="text" id="newHabitName" placeholder="New habit...">
+            <button onclick="addNewHabit()">+</button>
         </div>
-        <div class="row">
-          <label class="lbl">Token</label>
-          <input id="apiToken" type="password" placeholder="your token" />
-        </div>
-        <div class="row">
-          <button id="saveCfg" class="primary">Save</button>
-          <button id="clearCfg" class="ghost">Clear</button>
-        </div>
-        <p class="hint">Saved in this browser (local). Same URL works on phone/PC; just set it once per device.</p>
-      </details>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
