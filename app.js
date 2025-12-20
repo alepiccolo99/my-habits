@@ -48,8 +48,7 @@ function applyTheme(color) {
     currentTheme = color;
     document.documentElement.style.setProperty('--accent-color', color);
     
-    // FIX #4: Calculate RGBA for transparent background
-    // Assumes color is HEX format (#RRGGBB)
+    // Calculate RGBA for transparent background (if needed for other UI elements)
     if(color.startsWith('#') && color.length === 7) {
         const r = parseInt(color.substr(1,2), 16);
         const g = parseInt(color.substr(3,2), 16);
@@ -82,7 +81,6 @@ function router(viewId) {
     if (viewId === 'habits') {
         const addBtn = document.createElement('button');
         addBtn.innerHTML = "Add"; 
-        // FIX #3: Use 'btn-secondary' to match Edit/Cancel buttons exactly
         addBtn.className = "btn-secondary"; 
         addBtn.onclick = openAddHabitModal;
         actionArea.appendChild(addBtn);
@@ -123,7 +121,7 @@ function renderHabitDashboard() {
     const days = getRecentDays(5);
     const todayStr = new Date().toDateString(); 
     
-    // FIX #1: Highlight applied to the whole wrapper (.day-wrapper-header)
+    // Header Highlight: Colored box around the entire Day Block (Name + Number)
     header.innerHTML = '<div></div>' + days.map(d => {
         const isToday = d.toDateString() === todayStr;
         return `
@@ -142,9 +140,10 @@ function renderHabitDashboard() {
             ${days.map(d => {
                 const dateStr = d.toISOString().split('T')[0];
                 const checked = checkStatus(id, dateStr);
+                // FIX: Render X or Checkmark based on status
                 return `<div class="cell ${checked ? 'checked' : ''}" 
                         onclick="toggleHabit('${id}', '${dateStr}', this)">
-                        ${checked ? '✔' : ''}
+                        ${checked ? '✔' : '✕'}
                         </div>`;
             }).join('')}
         </div>`;
@@ -156,9 +155,14 @@ function checkStatus(id, dateStr) {
 }
 
 async function toggleHabit(id, date, el) {
+    // Current state (before toggle)
     const isChecked = el.classList.contains('checked');
+    
+    // Toggle visual class
     el.classList.toggle('checked');
-    el.innerText = isChecked ? '' : '✔';
+    
+    // FIX: Update Icon: If it was checked, it becomes unchecked (X). If unchecked -> check (✔)
+    el.innerText = isChecked ? '✕' : '✔';
     
     await sendData({ action: 'toggleHabit', habitId: id, date: date });
     
