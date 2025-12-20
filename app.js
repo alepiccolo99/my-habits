@@ -22,6 +22,7 @@ async function fetchData() {
             document.getElementById('themeColorPicker').value = savedTheme[1];
         }
         
+        // Load default view
         router('habits');
     } catch (e) {
         console.error(e);
@@ -29,6 +30,7 @@ async function fetchData() {
     }
 }
 
+// --- THEME ---
 function updateThemeFromPicker(color) {
     setTheme(color);
 }
@@ -46,30 +48,35 @@ function applyTheme(color) {
 
 // --- ROUTING & NAVIGATION FIX ---
 function router(viewId) {
+    // 1. Close Sidebar / Overlay
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').style.display = 'none';
     
-    // 1. Hide all views
+    // 2. Switch Views (Hide all, show target)
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
-    
-    // 2. Show selected view
     const target = document.getElementById(viewId + '-view');
     if(target) target.classList.add('active-view');
     
-    // 3. Move Sidebar Active Line
+    // 3. FIX: Sidebar Active State
+    // Remove 'active' from ALL sidebar buttons
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    const navBtn = document.getElementById('nav-' + viewId);
-    if(navBtn) navBtn.classList.add('active');
     
-    // 4. Header Titles & Actions
+    // Add 'active' ONLY to the current button (using the ID we added in HTML)
+    const activeBtn = document.getElementById('nav-' + viewId);
+    if(activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // 4. Update Header
     document.getElementById('page-title').innerText = viewId.charAt(0).toUpperCase() + viewId.slice(1);
     const actionArea = document.getElementById('header-action');
     actionArea.innerHTML = '';
     
+    // Header Actions (Habits only)
     if (viewId === 'habits') {
         const addBtn = document.createElement('button');
         addBtn.innerHTML = "+"; 
-        addBtn.className = "btn-secondary btn-header-add"; // Grey circle
+        addBtn.className = "btn-secondary btn-header-add"; 
         addBtn.onclick = () => document.getElementById('add-habit-modal').style.display = 'block';
         actionArea.appendChild(addBtn);
         renderHabitDashboard();
@@ -209,18 +216,15 @@ function renderCalendar(id) {
     grid.innerHTML = '';
     
     const now = new Date();
-    const days = ['M','T','W','T','F','S','S']; // Monday Start
+    const days = ['M','T','W','T','F','S','S']; 
     days.forEach(d => grid.innerHTML += `<div style="font-size:10px; color:#888">${d}</div>`);
     
-    // FIX: Show Actual Month Name (e.g., December 2025)
     document.getElementById('cal-month-name').innerText = now.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
     
     const year = now.getFullYear();
     const month = now.getMonth();
     
-    // FIX: Monday Start Logic
     let firstDayIndex = new Date(year, month, 1).getDay(); 
-    // JS returns 0 for Sunday. Convert to: Mon(0) ... Sun(6)
     firstDayIndex = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -251,9 +255,7 @@ function renderHeatmap(id) {
     } else if (mode === 'year') {
         startDate.setFullYear(today.getFullYear() - 1);
     } else if (mode === 'all') {
-        // FIX: All Time Logic (Default Jan 1 2025)
         startDate = new Date('2025-01-01');
-        // If data exists before 2025, use that
         const logs = appData.habitLogs.filter(l => l[0] == id).map(l => l[1]).sort();
         if(logs.length > 0) {
             const firstLog = new Date(logs[0]);
