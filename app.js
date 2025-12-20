@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwB49dnXc5wFyia7NTXHfgt0LJm6LX_nZWgssc_yEiY5UO6XtYoB71iUq06MxZ6QprvZA/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVNiBYJQDBIjwSGGEY9VQcMwQ6XH-8w4HzKDPNmUEc5sIbBFHLOhv87l77RpAHt-Vs8Q/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
@@ -23,11 +23,9 @@ async function fetchData() {
             document.getElementById('themeColorPicker').value = savedTheme[1];
         }
         
-        // Default View
         router('habits');
     } catch (e) {
         console.error(e);
-        // FIX Habits #1: Don't show "Loading failed". Show nothing or empty state.
         document.getElementById('habits-list').innerHTML = ""; 
     }
 }
@@ -47,7 +45,7 @@ function applyTheme(color) {
     currentTheme = color;
     document.documentElement.style.setProperty('--accent-color', color);
     
-    // FIX Settings #1: Update the color preview box
+    // Update preview box
     const previewBox = document.getElementById('color-preview-box');
     if(previewBox) previewBox.style.backgroundColor = color;
 }
@@ -71,7 +69,6 @@ function router(viewId) {
     
     if (viewId === 'habits') {
         const addBtn = document.createElement('button');
-        // FIX Habits #2: Text "Add"
         addBtn.innerHTML = "Add"; 
         addBtn.className = "btn-header-add"; 
         addBtn.onclick = () => document.getElementById('add-habit-modal').style.display = 'block';
@@ -102,9 +99,8 @@ function renderHabitDashboard() {
     const list = document.getElementById('habits-list');
     const header = document.getElementById('week-header');
     
-    // FIX Habits #1: Clean handling of empty state
     if (!appData.habits || appData.habits.length === 0) {
-        list.innerHTML = ""; // Show nothing as requested
+        list.innerHTML = ""; 
         header.innerHTML = '';
         return;
     }
@@ -168,7 +164,6 @@ function openHabitDetail(id) {
     const habit = appData.habits.find(h => h[0] == id);
     if(!habit) return;
     
-    // Reset calendar to now
     calendarOffsetDate = new Date();
 
     document.getElementById('modal-habit-title').innerText = habit[1];
@@ -220,7 +215,6 @@ function renderHabitStats(id) {
     document.getElementById('stat-rate').innerText = rate + "%";
 }
 
-// FIX Habits #4: Calendar Navigation
 function changeCalendarMonth(delta) {
     calendarOffsetDate.setMonth(calendarOffsetDate.getMonth() + delta);
     renderCalendar(currentHabitId);
