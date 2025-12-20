@@ -53,7 +53,7 @@
                         Pick Color
                         <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
                     </label>
-                    <div style="display: flex; align-items: center; margin-top: 15px; color: var(--text-secondary);">
+                    <div style="display: flex; align-items: center; justify-content: flex-start; margin-top: 15px; color: var(--text-secondary);">
                         Picked color: <span id="color-preview-box" class="color-preview-box" style="margin-left: 10px;"></span>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
             <div class="card">
                 <div class="calendar-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <button class="btn-text-gray" onclick="changeCalendarMonth(-1)" style="font-size:24px; padding:0 15px;">&#8249;</button>
-                    <h3 id="cal-month-name" style="margin:0; width:200px; text-align:center;">Month</h3>
+                    <h3 id="cal-month-name" style="margin:0; width:230px; text-align:center;">Month</h3>
                     <button class="btn-text-gray" onclick="changeCalendarMonth(1)" style="font-size:24px; padding:0 15px;">&#8250;</button>
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
