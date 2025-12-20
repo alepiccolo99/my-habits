@@ -34,12 +34,15 @@ button, .stat-val {
 
 /* FIX Habits #2: Force tick color to User Accent Color */
 .cell.checked {
+    /* iOS often renders ✔ as an emoji. We force it to be text to accept color. */
     color: var(--accent-color) !important;
     background: rgba(255, 255, 255, 0.1); 
-    font-weight: 900; /* Thicker bold */
-    opacity: 1; /* Ensure no transparency fades the color */
-    -webkit-text-fill-color: var(--accent-color) !important;
-    text-shadow: 0 0 0 var(--accent-color); /* Browser trick to force color */
+    font-weight: 900;
+    
+    /* Trick to prevent iOS Emoji rendering */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    -webkit-text-fill-color: var(--accent-color); 
+    opacity: 1;
 }
 
 .cell.current-day {
@@ -49,16 +52,14 @@ button, .stat-val {
 
 /* --- LOADING SPINNER (FIX Habits #1) --- */
 #loading-overlay {
-    position: absolute;
-    top: 100px; /* Below header */
-    left: 0;
-    width: 100%;
+    position: fixed; /* Changed from absolute to fixed */
+    inset: 0; /* Covers the whole screen */
+    background-color: #000000; /* Solid black background */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-top: 50px;
-    z-index: 50;
+    z-index: 9999; /* Highest priority */
 }
 
 .spinner {
