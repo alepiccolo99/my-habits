@@ -32,20 +32,14 @@ button, .stat-val {
     color: var(--text-primary); 
 }
 
-/* FIX Habits #1: ULTIMATE FORCE TICK COLOR */
+/* FIX Habits #2: Force tick color to User Accent Color */
 .cell.checked {
     color: var(--accent-color) !important;
-    font-weight: 900; 
-    opacity: 1; /* Prevents fading */
-    /* Force text fill color for webkit browsers */
+    background: rgba(255, 255, 255, 0.1); 
+    font-weight: 900; /* Thicker bold */
+    opacity: 1; /* Ensure no transparency fades the color */
     -webkit-text-fill-color: var(--accent-color) !important;
-    /* Remove any default text shadow causing greyness */
-    text-shadow: none; 
-}
-
-/* Optional: Slight background tint when checked */
-.cell.checked {
-    background: rgba(255, 255, 255, 0.05); 
+    text-shadow: 0 0 0 var(--accent-color); /* Browser trick to force color */
 }
 
 .cell.current-day {
@@ -53,10 +47,10 @@ button, .stat-val {
     box-sizing: border-box;
 }
 
-/* --- LOADING SPINNER --- */
+/* --- LOADING SPINNER (FIX Habits #1) --- */
 #loading-overlay {
     position: absolute;
-    top: 100px;
+    top: 100px; /* Below header */
     left: 0;
     width: 100%;
     display: flex;
@@ -71,7 +65,7 @@ button, .stat-val {
     width: 40px;
     height: 40px;
     border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top: 4px solid var(--accent-color);
+    border-top: 4px solid var(--accent-color); /* Uses User Color */
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
