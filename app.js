@@ -137,10 +137,11 @@ function renderHabits() {
 }
 
 function toggleHabit(id, date, el) {
-    // Ottimismo
     const isChecked = el.classList.contains('checked');
+    // Se era checked, diventa empty e togliamo la spunta.
+    // Se era empty, diventa checked e mettiamo la spunta.
     el.className = isChecked ? 'cell empty' : 'cell checked';
-    el.innerText = isChecked ? '✕' : '✓';
+    el.innerText = isChecked ? '' : '✓';
     
     sendData({ action: 'toggleHabit', habitId: id, date: date });
 }
