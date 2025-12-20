@@ -1,94 +1,86 @@
-// CONFIGURATION
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyONineMVy_K_LwdTpnoP8aZDJQseMciR-wk6cMmA2Lv549_AUuA3zFN56rhLW-BukgYA/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXUhVIlUnNcwGbAAGIrn_fi86biNOzRdgXnP9ArxTZk2PEAVcTnvviCaMXC8hAN05K5g/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
-// GLOBAL STATE
-let appData = {
-    habits: [], habitLogs: [], settings: [],
-    healthLogs: [], exercises: [], workoutLogs: [], foods: [], dietLogs: []
-};
-let currentTheme = localStorage.getItem('appTheme') || '#0a84ff';
+// State
+let appData = { habits: [], habitLogs: [], settings: [], healthLogs: [] };
+let currentTheme = localStorage.getItem('theme') || '#0a84ff';
+let currentHabitId = null; // For modal
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    applyTheme(currentTheme); // Apply theme immediately
+    applyTheme(currentTheme); // Apply immediately
     fetchData();
 });
 
-function applyTheme(color) {
-    currentTheme = color;
-    localStorage.setItem('appTheme', color);
-    document.documentElement.style.setProperty('--accent-color', color);
-    document.documentElement.style.setProperty('--accent-dim', color + '33'); // 20% opacity
-    
-    // Highlight selected in settings
-    document.querySelectorAll('.color-opt').forEach(el => {
-        el.classList.toggle('selected', el.style.backgroundColor === color || el.style.backgroundColor.includes(color)); // basic check
-    });
-}
-
-async function setTheme(color) {
-    applyTheme(color);
-    // Sync to backend
-    await sendData({ action: 'saveSetting', key: 'appTheme', value: color });
-}
-
-// --- DATA FETCHING ---
 async function fetchData() {
     try {
         const resp = await fetch(`${SCRIPT_URL}?token=${TOKEN}&action=getAll`);
         const data = await resp.json();
         appData = data;
         
-        // Check if there is a saved theme in sheets that overrides local
-        const serverTheme = appData.settings.find(s => s[0] === 'appTheme');
-        if(serverTheme && serverTheme[1] !== currentTheme) {
-            applyTheme(serverTheme[1]);
+        // Sync Theme if exists in DB
+        const savedTheme = data.settings.find(s => s[0] === 'theme');
+        if (savedTheme) {
+            applyTheme(savedTheme[1]);
         }
-
-        renderAll();
+        
+        renderHabitDashboard();
     } catch (e) {
-        console.error("Fetch Error", e);
+        console.error(e);
+        document.getElementById('habits-list').innerText = "Error loading data.";
     }
 }
 
-function renderAll() {
-    renderHabitDashboard();
-    renderHealth();
-    populateDropdowns();
-    renderWorkoutLogs();
-    renderDietLogs();
+// --- THEME ENGINE ---
+function setTheme(color) {
+    applyTheme(color);
+    // Save to Local
+    localStorage.setItem('theme', color);
+    // Save to Cloud
+    sendData({ action: 'saveSetting', key: 'theme', value: color });
+}
+
+function applyTheme(color) {
+    currentTheme = color;
+    document.documentElement.style.setProperty('--accent-color', color);
 }
 
 // --- ROUTING ---
 function router(viewId) {
     document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('overlay').style.display = 'none';
     
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
     document.getElementById(viewId + '-view').classList.add('active-view');
     
-    // Update Header
-    const titleMap = {
-        'habits': 'Habits', 'health': 'Health', 'workout': 'Workout', 'diet': 'Diet', 'settings': 'Settings'
-    };
-    document.getElementById('page-title').innerText = titleMap[viewId] || 'Life Tracker';
+    document.getElementById('page-title').innerText = viewId.charAt(0).toUpperCase() + viewId.slice(1);
     
-    // Show/Hide Add Button
-    document.getElementById('headerActionBtn').style.display = (viewId === 'habits') ? 'block' : 'none';
+    // Header Actions
+    const actionArea = document.getElementById('header-action');
+    actionArea.innerHTML = '';
+    
+    if (viewId === 'habits') {
+        const addBtn = document.createElement('button');
+        addBtn.innerText = "+";
+        addBtn.style.fontSize = "24px";
+        addBtn.onclick = () => document.getElementById('add-habit-modal').style.display = 'block';
+        actionArea.appendChild(addBtn);
+    }
 }
 
 function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('overlay').classList.toggle('active');
+    const sb = document.getElementById('sidebar');
+    const open = sb.classList.contains('open');
+    sb.classList.toggle('open');
+    document.getElementById('overlay').style.display = open ? 'none' : 'block';
 }
 
-// --- HABIT DASHBOARD LOGIC ---
-function getLast5Days() {
+// --- HABIT DASHBOARD ---
+function getRecentDays(n) {
     const dates = [];
-    for(let i=4; i>=0; i--) {
+    for(let i=0; i<n; i++) {
         const d = new Date();
-        d.setDate(d.getDate() - i);
+        d.setDate(d.getDate() - (n-1) + i);
         dates.push(d);
     }
     return dates;
@@ -96,229 +88,209 @@ function getLast5Days() {
 
 function renderHabitDashboard() {
     const list = document.getElementById('habits-list');
-    const header = document.getElementById('habits-week-header');
-    const last5 = getLast5Days();
-    const daysOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-    // 1. Render Header
-    header.innerHTML = `<div></div>` + last5.map(d => `
-        <div class="day-col">
-            <div class="day-name">${daysOfWeek[d.getDay()]}</div>
+    const header = document.getElementById('week-header');
+    const days = getRecentDays(5); // Last 5 days
+    
+    // Header
+    header.innerHTML = '<div></div>' + days.map(d => `
+        <div>
+            <div class="day-name">${d.toLocaleDateString('en-US', {weekday:'short'})}</div>
             <div class="day-num">${d.getDate()}</div>
         </div>
     `).join('');
 
-    // 2. Render Rows
+    // List
     list.innerHTML = appData.habits.map(h => {
-        const hId = h[0];
-        const hName = h[1];
-        
-        const checksHtml = last5.map(dateObj => {
-            const dateStr = dateObj.toISOString().split('T')[0];
-            const isChecked = appData.habitLogs.some(l => l[0] == hId && l[1].includes(dateStr)); // loose match on date string
-            return `
-            <div style="display:flex; justify-content:center">
-                <div class="habit-check ${isChecked ? 'checked' : ''}" 
-                     onclick="toggleHabit('${hId}', '${dateStr}', this)">
-                     ${isChecked ? '✓' : ''}
-                </div>
-            </div>`;
-        }).join('');
-
+        const [id, name, freq, target] = h;
         return `
         <div class="habit-row">
-            <div class="habit-name" onclick="openHabitDetail('${hId}')">${hName}</div>
-            ${checksHtml}
+            <div class="habit-label" onclick="openHabitDetail('${id}')">${name}</div>
+            ${days.map(d => {
+                const dateStr = d.toISOString().split('T')[0];
+                const checked = checkStatus(id, dateStr);
+                return `<div class="cell ${checked ? 'checked' : ''}" 
+                        onclick="toggleHabit('${id}', '${dateStr}', this)">
+                        ${checked ? '✔' : ''}
+                        </div>`;
+            }).join('')}
         </div>`;
     }).join('');
 }
 
-function toggleHabit(id, date, el) {
-    const isChecked = el.classList.contains('checked');
+function checkStatus(id, dateStr) {
+    return appData.habitLogs.some(l => l[0] == id && String(l[1]).startsWith(dateStr));
+}
+
+async function toggleHabit(id, date, el) {
     // Optimistic UI
-    if(isChecked) {
-        el.classList.remove('checked');
-        el.innerText = '';
-        // Remove from local cache
-        appData.habitLogs = appData.habitLogs.filter(l => !(l[0] == id && l[1].includes(date)));
-    } else {
-        el.classList.add('checked');
-        el.innerText = '✓';
-        // Add to local cache
-        appData.habitLogs.push([id, date, true]);
-    }
-
-    sendData({ action: 'toggleHabit', habitId: id, date: date });
-}
-
-// --- HABIT DETAIL LOGIC ---
-function openHabitDetail(hId) {
-    const habit = appData.habits.find(h => h[0] == hId);
-    if(!habit) return;
-
-    // Filter logs for this habit
-    const logs = appData.habitLogs.filter(l => l[0] == hId).map(l => l[1].split('T')[0]); // Array of YYYY-MM-DD strings
-
-    document.getElementById('detail-title').innerText = habit[1];
-    document.getElementById('detail-freq').innerText = habit[2];
-    document.getElementById('detail-target').innerText = habit[3] + '/period';
-
-    // Stats Calc
-    const total = logs.length;
-    const streak = calculateStreak(logs);
-    const rate = calculateMonthRate(logs);
-
-    document.getElementById('stat-total').innerText = total;
-    document.getElementById('stat-streak').innerText = streak;
-    document.getElementById('stat-rate').innerText = rate + '%';
-
-    renderCalendar(logs);
-    renderHeatmap(logs);
-
-    // Show View
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
-    document.getElementById('habit-detail-view').classList.add('active-view');
-    // Hide header add button
-    document.getElementById('headerActionBtn').style.display = 'none';
-}
-
-function calculateStreak(logs) {
-    // Basic streak calculation (consecutive days ending today or yesterday)
-    if(logs.length === 0) return 0;
-    const sorted = [...logs].sort().reverse(); // Newest first
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const isChecked = el.classList.contains('checked');
+    el.classList.toggle('checked');
+    el.innerText = isChecked ? '' : '✔';
     
-    let currentStreak = 0;
+    // Sync
+    await sendData({ action: 'toggleHabit', habitId: id, date: date });
+    
+    // Update data locally to reflect change without full reload
+    if(isChecked) {
+        appData.habitLogs = appData.habitLogs.filter(l => !(l[0] == id && String(l[1]).startsWith(date)));
+    } else {
+        appData.habitLogs.push([id, date, 1]);
+    }
+    // If modal is open, refresh stats
+    if(document.getElementById('habit-detail-modal').style.display === 'block') {
+        renderHabitStats(id);
+        renderCalendar(id);
+    }
+}
+
+async function handleAddHabit() {
+    const name = document.getElementById('newHabitName').value;
+    if(!name) return;
+    const id = Date.now().toString();
+    const freq = document.getElementById('newHabitFreq').value;
+    const target = document.getElementById('newHabitTarget').value;
+    
+    await sendData({ action: 'addHabit', id, name, frequency: freq, target });
+    document.getElementById('add-habit-modal').style.display='none';
+    fetchData(); // Reload
+}
+
+// --- HABIT DETAIL (BEAVER STYLE) ---
+function openHabitDetail(id) {
+    currentHabitId = id;
+    const habit = appData.habits.find(h => h[0] == id);
+    if(!habit) return;
+    
+    document.getElementById('modal-habit-title').innerText = habit[1];
+    document.getElementById('habit-detail-modal').style.display = 'block';
+    
+    // Setup Edit Form
+    document.getElementById('edit-freq').value = habit[2] || 'Daily';
+    document.getElementById('edit-target').value = habit[3] || 1;
+    document.getElementById('habit-edit-form').style.display = 'none';
+
+    renderHabitStats(id);
+    renderCalendar(id);
+    renderHeatmap(id);
+}
+
+function closeHabitModal() {
+    document.getElementById('habit-detail-modal').style.display = 'none';
+    renderHabitDashboard(); // Refresh main view just in case
+}
+
+function renderHabitStats(id) {
+    // Logic for Streaks and Completion
+    const logs = appData.habitLogs.filter(l => l[0] == id).map(l => l[1].substring(0,10)).sort();
+    
+    // 1. Total
+    document.getElementById('stat-total').innerText = logs.length;
+    
+    // 2. Streak (Simple daily logic)
+    let streak = 0;
+    const today = new Date().toISOString().split('T')[0];
     let checkDate = new Date();
     
-    // Check if streak is active (logged today or yesterday)
-    if(!sorted.includes(today) && !sorted.includes(yesterday)) return 0;
-
-    // Start checking from today backwards
-    // Simplification: Iterate backwards from today
-    for(let i=0; i<365; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dStr = d.toISOString().split('T')[0];
-        if(logs.includes(dStr)) {
-            currentStreak++;
-        } else {
-            // Allow missing today if it's not over yet
-            if(dStr === today) continue;
+    // Check if today or yesterday is logged to start streak
+    if (logs.includes(today)) streak = 1;
+    
+    // Iterate backwards
+    while(true) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        const dateStr = checkDate.toISOString().split('T')[0];
+        if (logs.includes(dateStr)) {
+            streak++;
+        } else if (dateStr !== today) { // If it's not today (which we already checked), break
             break;
         }
     }
-    return currentStreak;
+    document.getElementById('stat-streak').innerText = streak;
+    
+    // 3. Rate (Last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentLogs = logs.filter(d => new Date(d) >= thirtyDaysAgo);
+    const rate = Math.round((recentLogs.length / 30) * 100);
+    document.getElementById('stat-rate').innerText = rate + "%";
 }
 
-function calculateMonthRate(logs) {
+function renderCalendar(id) {
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    
     const now = new Date();
-    const currentMonthPrefix = now.toISOString().slice(0, 7); // YYYY-MM
-    const daysInMonth = now.getDate(); // Days passed so far
-    const logsInMonth = logs.filter(l => l.startsWith(currentMonthPrefix)).length;
-    if(daysInMonth === 0) return 0;
-    return Math.round((logsInMonth / daysInMonth) * 100);
-}
-
-function renderCalendar(logs) {
-    const container = document.getElementById('calendar-grid');
-    const now = new Date();
+    // Headers (S M T W T F S)
+    const days = ['S','M','T','W','T','F','S'];
+    days.forEach(d => grid.innerHTML += `<div style="font-size:10px; color:#888">${d}</div>`);
+    
+    // Get First day of current month
     const year = now.getFullYear();
     const month = now.getMonth();
-    
-    document.getElementById('cal-month-name').innerText = now.toLocaleString('default', { month: 'long' });
-
-    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sun
+    const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
-    let html = '';
-    const daysOfWeek = ['S','M','T','W','T','F','S'];
-    
-    daysOfWeek.forEach(d => html += `<div class="cal-day-header">${d}</div>`);
-
     // Empty slots
-    for(let i=0; i<firstDay; i++) html += `<div></div>`;
-
+    for(let i=0; i<firstDay; i++) {
+        grid.innerHTML += '<div></div>';
+    }
+    
     // Days
     for(let i=1; i<=daysInMonth; i++) {
-        const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        const isActive = logs.includes(dStr);
-        const isToday = (i === now.getDate());
-        html += `<div class="cal-day ${isActive?'active':''} ${isToday?'today':''}">${i}</div>`;
+        const dateStr = new Date(year, month, i).toISOString().split('T')[0]; // Format with timezone care needed in prod, simplified here
+        // Safe formatting for local comparison:
+        const checkDate = new Date(year, month, i);
+        const isoDate = new Date(checkDate.getTime() - (checkDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+        const isChecked = checkStatus(id, isoDate);
+        const isToday = i === now.getDate();
+        
+        grid.innerHTML += `<div class="cal-day ${isChecked?'active':''} ${isToday?'today':''}">${i}</div>`;
     }
-    container.innerHTML = html;
 }
 
-function renderHeatmap(logs) {
-    const container = document.getElementById('heatmap-grid');
-    let html = '';
-    // Last 90 days
-    for(let i=89; i>=0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dStr = d.toISOString().split('T')[0];
-        const isFilled = logs.includes(dStr);
-        html += `<div class="heat-box ${isFilled?'filled':''}" title="${dStr}"></div>`;
-    }
-    container.innerHTML = html;
-}
-
-// --- ADD MODAL ---
-function openAddModal() {
-    document.getElementById('addHabitModal').showModal();
-}
-
-async function submitNewHabit() {
-    const name = document.getElementById('newHabitName').value;
-    const freq = document.getElementById('newHabitFreq').value;
-    if(!name) return;
+function renderHeatmap(id) {
+    // Simplified 3-month grid (approx 90 days)
+    const grid = document.getElementById('heatmap-grid');
+    grid.innerHTML = '';
     
-    const id = "h_" + Date.now();
-    appData.habits.push([id, name, freq, 1, false]); // Local update
-    renderHabitDashboard(); // Refresh UI
-    document.getElementById('addHabitModal').close();
+    const today = new Date();
+    for(let i=90; i>=0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const isoDate = d.toISOString().split('T')[0];
+        const isChecked = checkStatus(id, isoDate);
+        
+        grid.innerHTML += `<div class="heat-box ${isChecked?'filled':''}" title="${isoDate}"></div>`;
+    }
+}
 
-    await sendData({ 
-        action: 'addHabit', 
-        id: id, name: name, frequency: freq, goal: 1 
+// --- EDIT HABIT ---
+function toggleEditHabit() {
+    const form = document.getElementById('habit-edit-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveHabitConfig() {
+    const freq = document.getElementById('edit-freq').value;
+    const target = document.getElementById('edit-target').value;
+    
+    await sendData({
+        action: 'updateHabit',
+        id: currentHabitId,
+        frequency: freq,
+        target: target
     });
+    alert("Saved");
+    toggleEditHabit();
+    fetchData();
 }
 
 // --- GENERIC SEND ---
 async function sendData(payload) {
     payload.token = TOKEN;
-    try {
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify(payload)
-        });
-    } catch(e) {
-        console.error("Sync error", e);
-    }
-}
-
-// --- OTHER SECTIONS (Placeholders) ---
-function renderHealth() {
-    const list = document.getElementById('health-list');
-    list.innerHTML = appData.healthLogs.slice(-5).reverse().map(l => `
-        <div class="log-item">
-            <div>${l[1]}</div>
-            <div>${l[2]}</div>
-        </div>
-    `).join('');
-}
-function handleAddMetric() { 
-    // Simplified logic for brevity, expands same as Habit
-    alert("Saved! (Check console for full logic)");
-}
-function populateDropdowns() { /* ... fill workout/diet selects ... */ }
-function renderWorkoutLogs() { /* ... */ }
-function renderDietLogs() { /* ... */ }
-function switchTab(sec, tab) {
-    document.querySelectorAll(`#${sec}-view .tab-btn`).forEach(b => b.classList.remove('active'));
-    document.querySelectorAll(`#${sec}-view .tab-content`).forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById(`${sec}-${tab}-tab`).classList.add('active');
+    return await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload)
+    });
 }
