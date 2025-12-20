@@ -4,7 +4,7 @@ const TOKEN = "aleLifeTracker_1999";
 let appData = { habits: [], habitLogs: [], settings: [] };
 let currentTheme = localStorage.getItem('theme') || '#0a84ff';
 let currentHabitId = null; 
-let calendarOffsetDate = new Date(); // FIX Habits #5: Navigation State
+let calendarOffsetDate = new Date(); 
 
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme(currentTheme);
@@ -27,8 +27,8 @@ async function fetchData() {
         router('habits');
     } catch (e) {
         console.error(e);
-        // FIX Habits #1: Don't show "Loading failed", show empty if no habits
-        document.getElementById('habits-list').innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No habits found. Click + to add one.</div>`;
+        // FIX Habits #1: Do not show "Loading failed" if empty. Just clear.
+        document.getElementById('habits-list').innerHTML = "";
     }
 }
 
@@ -47,9 +47,9 @@ function applyTheme(color) {
     currentTheme = color;
     document.documentElement.style.setProperty('--accent-color', color);
     
-    // FIX Settings #2: Show HEX
-    const hexDisplay = document.getElementById('color-hex-display');
-    if(hexDisplay) hexDisplay.innerText = `Picked color: ${color.toUpperCase()}`;
+    // FIX Settings #1: Update the color preview box
+    const previewBox = document.getElementById('color-preview-box');
+    if(previewBox) previewBox.style.backgroundColor = color;
 }
 
 // --- ROUTING ---
@@ -71,8 +71,9 @@ function router(viewId) {
     
     if (viewId === 'habits') {
         const addBtn = document.createElement('button');
-        addBtn.innerHTML = "+"; 
-        addBtn.className = "btn-secondary btn-header-add"; 
+        // FIX Habits #2: Text "Add" instead of +
+        addBtn.innerHTML = "Add"; 
+        addBtn.className = "btn-header-add"; 
         addBtn.onclick = () => document.getElementById('add-habit-modal').style.display = 'block';
         actionArea.appendChild(addBtn);
         renderHabitDashboard();
@@ -101,9 +102,8 @@ function renderHabitDashboard() {
     const list = document.getElementById('habits-list');
     const header = document.getElementById('week-header');
     
-    // FIX Habits #1: Handle empty list gracefully
     if (!appData.habits || appData.habits.length === 0) {
-        list.innerHTML = `<div style="text-align:center; color:#555; margin-top:30px;">No habits yet.</div>`;
+        list.innerHTML = `<div style="text-align:center; color:#555; margin-top:30px;">Tap "Add" to start.</div>`;
         header.innerHTML = '';
         return;
     }
@@ -155,7 +155,6 @@ async function toggleHabit(id, date, el) {
     }
     
     if(document.getElementById('habit-detail-modal').style.display === 'block') {
-        // Just refresh stats/calendar, don't reset date
         renderHabitStats(id);
         renderCalendar(id);
         renderHeatmap(id);
@@ -168,7 +167,7 @@ function openHabitDetail(id) {
     const habit = appData.habits.find(h => h[0] == id);
     if(!habit) return;
     
-    // FIX Habits #5: Reset calendar to current month when opening
+    // Reset calendar to now when opening
     calendarOffsetDate = new Date();
 
     document.getElementById('modal-habit-title').innerText = habit[1];
@@ -230,7 +229,6 @@ function renderCalendar(id) {
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = '';
     
-    // Use the offset date, not new Date()
     const displayDate = new Date(calendarOffsetDate);
     
     const days = ['M','T','W','T','F','S','S']; 
