@@ -26,34 +26,30 @@ button, .stat-val {
     color: var(--accent-color);
 }
 
-/* SIDEBAR ACTIVE STATE */
 .nav-btn.active { 
     background: var(--bg-input); 
     border-right: 3px solid var(--accent-color); 
     color: var(--text-primary); 
 }
 
-/* HABIT TICKS - FORCE COLOR */
+/* FIX Habits #4: Force tick color */
 .cell.checked {
-    color: var(--accent-color) !important; /* Forces the checkmark color */
+    color: var(--accent-color) !important;
     background: rgba(255, 255, 255, 0.1); 
     font-weight: 800;
 }
 
-/* CURRENT DAY BORDER */
 .cell.current-day {
     border: 1px solid var(--accent-color);
     box-sizing: border-box;
 }
 
 /* --- BUTTONS --- */
-
-/* Primary (Create Habit / Save) - Round Pill Shape */
 .btn-primary {
     background: var(--accent-color) !important;
     color: #000 !important;
     border: none !important;
-    border-radius: 30px !important; /* Rounder */
+    border-radius: 30px !important;
     padding: 16px 24px !important;
     width: 100%;
     cursor: pointer;
@@ -62,9 +58,8 @@ button, .stat-val {
     margin-top: 10px;
 }
 
-/* Secondary (Cancel, Back, Header +) - Light Grey */
 .btn-secondary {
-    background: #3a3a3c !important; /* Light Grey */
+    background: #3a3a3c !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: var(--btn-radius);
@@ -77,16 +72,22 @@ button, .stat-val {
     justify-content: center;
 }
 
-/* Header Add Button (+) Specifics */
+/* FIX Habits #2: Header Add Button Color */
 .btn-header-add {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    font-size: 24px;
-    padding: 0; /* Center the plus */
+    font-size: 28px;
+    padding: 0;
+    background: #3a3a3c !important; /* Grey background */
+    color: var(--accent-color) !important; /* Accent Color + */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
 }
 
-/* Edit Button (Text only) */
 .btn-text-gray {
     color: #8e8e93 !important;
     background: none;
@@ -106,9 +107,25 @@ button, .stat-val {
     font-weight: 600;
 }
 
-/* --- INPUTS & DROPDOWNS --- */
-.color-picker-wrapper { position: relative; width: 100%; }
-.btn-picker { width: 100%; background: var(--bg-input); color: var(--text-primary); padding: 15px; border-radius: var(--btn-radius); text-align: center; font-weight: 600; cursor: pointer; display: block; }
+/* --- SETTINGS FIXES --- */
+/* FIX Settings #1: Prevent overflow */
+.color-picker-wrapper { 
+    position: relative; 
+    width: 100%; 
+    box-sizing: border-box; /* Ensures padding is included in width */
+}
+.btn-picker { 
+    width: 100%; 
+    background: var(--bg-input); 
+    color: var(--text-primary); 
+    padding: 15px; 
+    border-radius: var(--btn-radius); 
+    text-align: center; 
+    font-weight: 600; 
+    cursor: pointer; 
+    display: block; 
+    box-sizing: border-box; /* Fix width issue */
+}
 input[type="color"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 
 input, select { 
@@ -123,7 +140,6 @@ input, select {
     font-size: 16px; 
 }
 
-/* Custom Select Style (Arrow 'v') */
 select {
     -webkit-appearance: none;
     appearance: none;
@@ -131,7 +147,7 @@ select {
     background-repeat: no-repeat;
     background-position: right 15px top 50%;
     background-size: 12px auto;
-    padding-right: 40px; /* Space for arrow */
+    padding-right: 40px;
 }
 
 /* --- LAYOUT --- */
@@ -153,7 +169,7 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 .nav-btn { width: 100%; padding: 15px 20px; background: none; border: none; text-align: left; color: var(--text-secondary); font-size: 16px; cursor: pointer; }
 #overlay { position: fixed; inset:0; background: rgba(0,0,0,0.5); z-index: 900; display: none; }
 
-/* Habits Grid */
+/* Grid Styles */
 .days-row { display: grid; grid-template-columns: 1fr repeat(5, 45px); gap: 5px; margin-bottom: 10px; text-align: center; }
 .habit-row { display: grid; grid-template-columns: 1fr repeat(5, 45px); gap: 5px; margin-bottom: 8px; align-items: stretch; }
 .habit-label { background: var(--bg-card); min-height: 55px; display: flex; align-items: center; padding-left: 15px; border-radius: 10px; font-weight: 500; cursor: pointer; }
@@ -161,7 +177,6 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 .day-name { font-size: 12px; color: var(--text-secondary); }
 .day-num { font-size: 16px; font-weight: 600; }
 
-/* Modals */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; overflow-y: auto; padding-bottom: 40px;}
 .modal-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; position: sticky; top: 0; background: #000; z-index: 10; border-bottom: 1px solid var(--border-color); }
 .modal-content { padding: 20px; max-width: 600px; margin: 0 auto; }
@@ -181,4 +196,6 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 .heat-box { aspect-ratio: 1; background: var(--bg-input); border-radius: 3px; }
 .heat-box.filled { background: var(--accent-color); }
 
+/* FIX Habits #6: Wider history select */
+#heatmap-select { width: auto; min-width: 150px; }
 .input-row { display: flex; gap: 10px; }
