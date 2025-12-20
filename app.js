@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB3OJDNUSWmyHpTCQmVWF9KwF1BLjyriPVXbz0rWSmyfhCllw3gISL89NpFdPqHMVv/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwB49dnXc5wFyia7NTXHfgt0LJm6LX_nZWgssc_yEiY5UO6XtYoB71iUq06MxZ6QprvZA/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
@@ -12,15 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchData() {
-    // FIX: Ensure loader is visible (it is by default in HTML now)
     const loader = document.getElementById('loading-overlay');
-    
     try {
         const resp = await fetch(`${SCRIPT_URL}?token=${TOKEN}&action=getAll`);
         const data = await resp.json();
         appData = data;
         
-        // Settings apply
         const savedTheme = data.settings.find(s => s[0] === 'theme');
         if (savedTheme) {
             applyTheme(savedTheme[1]);
@@ -31,9 +28,7 @@ async function fetchData() {
         router('habits');
     } catch (e) {
         console.error("Fetch Error:", e);
-        // Fallback: if offline, still try to show UI
     } finally {
-        // FIX: Hide loading overlay only when done
         if(loader) loader.style.display = 'none';
     }
 }
@@ -52,8 +47,6 @@ function setTheme(color) {
 function applyTheme(color) {
     currentTheme = color;
     document.documentElement.style.setProperty('--accent-color', color);
-    
-    // Update preview box
     const previewBox = document.getElementById('color-preview-box');
     if(previewBox) previewBox.style.backgroundColor = color;
 }
@@ -79,7 +72,6 @@ function router(viewId) {
         const addBtn = document.createElement('button');
         addBtn.innerHTML = "Add"; 
         addBtn.className = "btn-header-add"; 
-        // FIX: Call openAddHabitModal instead of direct style change
         addBtn.onclick = openAddHabitModal;
         actionArea.appendChild(addBtn);
         renderHabitDashboard();
@@ -108,7 +100,6 @@ function renderHabitDashboard() {
     const list = document.getElementById('habits-list');
     const header = document.getElementById('week-header');
     
-    // FIX: Filter out empty rows or invalid data to prevent crashes
     const validHabits = (appData.habits || []).filter(h => h[0] && h[1]);
 
     if (validHabits.length === 0) {
@@ -120,12 +111,16 @@ function renderHabitDashboard() {
     const days = getRecentDays(5);
     const todayStr = new Date().toDateString(); 
     
-    header.innerHTML = '<div></div>' + days.map(d => `
+    // FIX: Apply highlight to the Header Div for today
+    header.innerHTML = '<div></div>' + days.map(d => {
+        const isToday = d.toDateString() === todayStr;
+        return `
         <div>
             <div class="day-name">${d.toLocaleDateString('en-US', {weekday:'short'})}</div>
-            <div class="day-num">${d.getDate()}</div>
+            <div class="day-num ${isToday ? 'day-highlight' : ''}">${d.getDate()}</div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     list.innerHTML = validHabits.map(h => {
         const [id, name] = h;
@@ -135,9 +130,8 @@ function renderHabitDashboard() {
             ${days.map(d => {
                 const dateStr = d.toISOString().split('T')[0];
                 const checked = checkStatus(id, dateStr);
-                const isToday = d.toDateString() === todayStr;
-                
-                return `<div class="cell ${checked ? 'checked' : ''} ${isToday ? 'current-day' : ''}" 
+                // Removed 'current-day' class from cell here
+                return `<div class="cell ${checked ? 'checked' : ''}" 
                         onclick="toggleHabit('${id}', '${dateStr}', this)">
                         ${checked ? '✔' : ''}
                         </div>`;
@@ -147,7 +141,6 @@ function renderHabitDashboard() {
 }
 
 function checkStatus(id, dateStr) {
-    // String conversion ensures ID match (number vs string)
     return appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]).startsWith(dateStr));
 }
 
@@ -159,10 +152,8 @@ async function toggleHabit(id, date, el) {
     await sendData({ action: 'toggleHabit', habitId: id, date: date });
     
     if(isChecked) {
-        // Optimistic remove
         appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]).startsWith(date)));
     } else {
-        // Optimistic add
         appData.habitLogs.push([id, date, 1]);
     }
     
@@ -184,8 +175,9 @@ function openHabitDetail(id) {
     document.getElementById('modal-habit-title').innerText = habit[1];
     document.getElementById('habit-detail-modal').style.display = 'block';
     
-    // Pre-fill Edit Form
+    // FIX: Ensure Pre-fill Logic works correctly
     document.getElementById('edit-name').value = habit[1];
+    // Match the select value exactly as stored (e.g. "Daily")
     document.getElementById('edit-freq').value = habit[2] || 'Daily';
     document.getElementById('edit-target').value = habit[3] || 1;
     
@@ -346,7 +338,6 @@ async function deleteCurrentHabit() {
     closeHabitModal();
 }
 
-// FIX: New function to reset form, then show modal
 function openAddHabitModal() {
     document.getElementById('newHabitName').value = "";
     document.getElementById('newHabitFreq').value = "Daily";
