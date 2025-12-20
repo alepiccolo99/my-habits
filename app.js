@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchData() {
-    // Show loading
     const loader = document.getElementById('loading-overlay');
     if(loader) loader.style.display = 'flex';
 
@@ -30,8 +29,8 @@ async function fetchData() {
         router('habits');
     } catch (e) {
         console.error(e);
+        document.getElementById('habits-list').innerHTML = ""; 
     } finally {
-        // FIX Habits #1: Hide loading overlay
         if(loader) loader.style.display = 'none';
     }
 }
@@ -51,7 +50,6 @@ function applyTheme(color) {
     currentTheme = color;
     document.documentElement.style.setProperty('--accent-color', color);
     
-    // Update preview box
     const previewBox = document.getElementById('color-preview-box');
     if(previewBox) previewBox.style.backgroundColor = color;
 }
@@ -175,7 +173,8 @@ function openHabitDetail(id) {
     document.getElementById('modal-habit-title').innerText = habit[1];
     document.getElementById('habit-detail-modal').style.display = 'block';
     
-    // FIX Habits #3: Pre-fill Edit Form Values
+    // FIX Habits #2: Pre-fill Edit Inputs
+    // habit array structure: [id, name, frequency, target]
     document.getElementById('edit-name').value = habit[1];
     document.getElementById('edit-freq').value = habit[2] || 'Daily';
     document.getElementById('edit-target').value = habit[3] || 1;
