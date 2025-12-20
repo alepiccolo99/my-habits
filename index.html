@@ -53,6 +53,7 @@
                         Pick Color
                         <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
                     </label>
+                    <div id="color-hex-display" style="text-align: center; margin-top: 10px; color: var(--text-secondary); font-family: monospace;"></div>
                 </div>
             </div>
         </section>
@@ -73,6 +74,8 @@
                     <select id="edit-freq">
                         <option value="Daily">Daily</option>
                         <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Yearly">Yearly</option>
                     </select>
                     <input type="number" id="edit-target" placeholder="Target">
                 </div>
@@ -96,8 +99,10 @@
             </div>
 
             <div class="card">
-                <div class="calendar-header" style="text-align:center; margin-bottom:10px;">
-                    <h3 id="cal-month-name">Month</h3>
+                <div class="calendar-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <button class="btn-text-gray" onclick="changeCalendarMonth(-1)" style="font-size:20px; padding:0 10px;">&#8249;</button>
+                    <h3 id="cal-month-name" style="margin:0; width:150px; text-align:center;">Month</h3>
+                    <button class="btn-text-gray" onclick="changeCalendarMonth(1)" style="font-size:20px; padding:0 10px;">&#8250;</button>
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
             </div>
@@ -105,7 +110,7 @@
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h3 style="margin:0; font-size:18px">History</h3>
-                    <select id="heatmap-select" onchange="renderHeatmap(currentHabitId)" style="width: 140px; margin:0;">
+                    <select id="heatmap-select" onchange="renderHeatmap(currentHabitId)">
                         <option value="3months">Last 3 Months</option>
                         <option value="year">Last Year</option>
                         <option value="all">All Time</option>
@@ -129,6 +134,8 @@
                     <select id="newHabitFreq">
                         <option value="Daily">Daily</option>
                         <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Yearly">Yearly</option>
                     </select>
                     <input type="number" id="newHabitTarget" value="1">
                 </div>
