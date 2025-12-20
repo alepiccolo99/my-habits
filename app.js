@@ -19,9 +19,9 @@ async function fetchData() {
         const savedTheme = data.settings.find(s => s[0] === 'theme');
         if (savedTheme) {
             applyTheme(savedTheme[1]);
+            document.getElementById('themeColorPicker').value = savedTheme[1];
         }
         
-        // Default View
         router('habits');
     } catch (e) {
         console.error(e);
@@ -29,7 +29,6 @@ async function fetchData() {
     }
 }
 
-// --- THEME ---
 function updateThemeFromPicker(color) {
     setTheme(color);
 }
@@ -45,24 +44,32 @@ function applyTheme(color) {
     document.documentElement.style.setProperty('--accent-color', color);
 }
 
-// --- ROUTING ---
+// --- ROUTING & NAVIGATION FIX ---
 function router(viewId) {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').style.display = 'none';
     
+    // 1. Hide all views
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
+    
+    // 2. Show selected view
     const target = document.getElementById(viewId + '-view');
     if(target) target.classList.add('active-view');
     
+    // 3. Move Sidebar Active Line
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    const navBtn = document.getElementById('nav-' + viewId);
+    if(navBtn) navBtn.classList.add('active');
+    
+    // 4. Header Titles & Actions
     document.getElementById('page-title').innerText = viewId.charAt(0).toUpperCase() + viewId.slice(1);
     const actionArea = document.getElementById('header-action');
     actionArea.innerHTML = '';
     
-    // Header Buttons (The + Button)
     if (viewId === 'habits') {
         const addBtn = document.createElement('button');
-        addBtn.innerHTML = "+"; // Plus symbol
-        addBtn.className = "btn-header-add";
+        addBtn.innerHTML = "+"; 
+        addBtn.className = "btn-secondary btn-header-add"; // Grey circle
         addBtn.onclick = () => document.getElementById('add-habit-modal').style.display = 'block';
         actionArea.appendChild(addBtn);
         renderHabitDashboard();
@@ -76,7 +83,7 @@ function toggleSidebar() {
     document.getElementById('overlay').style.display = open ? 'none' : 'block';
 }
 
-// --- HABITS LIST ---
+// --- HABITS DASHBOARD ---
 function getRecentDays(n) {
     const dates = [];
     for(let i=0; i<n; i++) {
@@ -91,7 +98,7 @@ function renderHabitDashboard() {
     const list = document.getElementById('habits-list');
     const header = document.getElementById('week-header');
     const days = getRecentDays(5);
-    const todayStr = new Date().toDateString(); // For comparison
+    const todayStr = new Date().toDateString(); 
     
     header.innerHTML = '<div></div>' + days.map(d => `
         <div>
@@ -180,8 +187,7 @@ function renderHabitStats(id) {
     let checkDate = new Date();
     if (logs.includes(today)) streak = 1;
     
-    // Simple streak logic
-    let loopLimit = 365; // Safety break
+    let loopLimit = 365; 
     while(loopLimit > 0) {
         checkDate.setDate(checkDate.getDate() - 1);
         const dateStr = checkDate.toISOString().split('T')[0];
@@ -203,17 +209,18 @@ function renderCalendar(id) {
     grid.innerHTML = '';
     
     const now = new Date();
-    const days = ['M','T','W','T','F','S','S'];
+    const days = ['M','T','W','T','F','S','S']; // Monday Start
     days.forEach(d => grid.innerHTML += `<div style="font-size:10px; color:#888">${d}</div>`);
     
-    // Fix: Show Current Month Name correctly
+    // FIX: Show Actual Month Name (e.g., December 2025)
     document.getElementById('cal-month-name').innerText = now.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
     
     const year = now.getFullYear();
     const month = now.getMonth();
     
+    // FIX: Monday Start Logic
     let firstDayIndex = new Date(year, month, 1).getDay(); 
-    // Convert Sun(0) to 6, Mon(1) to 0
+    // JS returns 0 for Sunday. Convert to: Mon(0) ... Sun(6)
     firstDayIndex = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -229,7 +236,6 @@ function renderCalendar(id) {
 }
 
 function renderHeatmap(id) {
-    // Re-fetch ID if called from dropdown (select passes value not id)
     if(!id) id = currentHabitId;
     
     const mode = document.getElementById('heatmap-select').value;
@@ -245,12 +251,13 @@ function renderHeatmap(id) {
     } else if (mode === 'year') {
         startDate.setFullYear(today.getFullYear() - 1);
     } else if (mode === 'all') {
-        // Find first log ever for this habit
+        // FIX: All Time Logic (Default Jan 1 2025)
+        startDate = new Date('2025-01-01');
+        // If data exists before 2025, use that
         const logs = appData.habitLogs.filter(l => l[0] == id).map(l => l[1]).sort();
         if(logs.length > 0) {
-            startDate = new Date(logs[0]);
-        } else {
-            startDate.setMonth(today.getMonth() - 1); // Default if empty
+            const firstLog = new Date(logs[0]);
+            if (firstLog < startDate) startDate = firstLog;
         }
     }
 
