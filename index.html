@@ -17,11 +17,11 @@
             </div>
         </div>
         <nav>
-            <button onclick="router('habits')" class="nav-btn active">Habits</button>
-            <button onclick="router('health')" class="nav-btn">Health</button>
-            <button onclick="router('workout')" class="nav-btn">Workout</button>
-            <button onclick="router('diet')" class="nav-btn">Diet</button>
-            <button onclick="router('settings')" class="nav-btn" style="margin-top:auto">Settings</button>
+            <button id="nav-habits" onclick="router('habits')" class="nav-btn active">Habits</button>
+            <button id="nav-health" onclick="router('health')" class="nav-btn">Health</button>
+            <button id="nav-workout" onclick="router('workout')" class="nav-btn">Workout</button>
+            <button id="nav-diet" onclick="router('diet')" class="nav-btn">Diet</button>
+            <button id="nav-settings" onclick="router('settings')" class="nav-btn" style="margin-top:auto">Settings</button>
         </nav>
     </div>
 
@@ -48,9 +48,7 @@
         <section id="settings-view" class="view">
             <div class="card">
                 <h3>App Theme</h3>
-                <p class="text-secondary">Customize your accent color</p>
-                
-                <div class="color-picker-wrapper">
+                <div class="color-picker-wrapper" style="margin-top:15px;">
                     <label class="btn-picker">
                         Pick Color
                         <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
@@ -64,7 +62,7 @@
         <div class="modal-header">
             <button class="btn-secondary" onclick="closeHabitModal()">Back</button>
             <h2 id="modal-habit-title">Habit</h2>
-            <button class="btn-secondary" style="background:transparent!important; color:var(--text-secondary)!important" onclick="toggleEditHabit()">Edit</button>
+            <button class="btn-text-gray" onclick="toggleEditHabit()">Edit</button>
         </div>
         
         <div class="modal-content">
@@ -107,7 +105,7 @@
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h3 style="margin:0; font-size:18px">History</h3>
-                    <select id="heatmap-select" onchange="renderHeatmap(currentHabitId)" style="width: auto; margin:0; padding: 5px 10px;">
+                    <select id="heatmap-select" onchange="renderHeatmap(currentHabitId)" style="width: 140px; margin:0;">
                         <option value="3months">Last 3 Months</option>
                         <option value="year">Last Year</option>
                         <option value="all">All Time</option>
@@ -122,7 +120,8 @@
         <div class="modal-header">
             <button class="btn-secondary" onclick="document.getElementById('add-habit-modal').style.display='none'">Cancel</button>
             <h2>New Habit</h2>
-            <div style="width:50px"></div> </div>
+            <div style="width:50px"></div>
+        </div>
         <div class="modal-content">
             <div class="card">
                 <input type="text" id="newHabitName" placeholder="Name (e.g. Read Book)">
