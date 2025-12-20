@@ -32,7 +32,6 @@ button, .stat-val {
     color: var(--text-primary); 
 }
 
-/* FIX: Tick Color - simplified and forced to use variable directly */
 .cell.checked {
     color: var(--accent-color) !important;
     background: rgba(255, 255, 255, 0.1); 
@@ -40,24 +39,32 @@ button, .stat-val {
     opacity: 1;
 }
 
+/* FIX: Removed cell border for current day */
 .cell.current-day {
-    border: 1px solid var(--accent-color);
+    /* border: 1px solid var(--accent-color); Removed */
     box-sizing: border-box;
 }
 
-/* FIX: Loading Overlay - Full Black Screen */
+/* FIX: New style for Header Day Highlight */
+.day-highlight {
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 8px;
+    padding: 2px 4px;
+}
+
 #loading-overlay {
     position: fixed;
     top: 0; 
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #000000; /* Deep black */
+    background-color: #000000;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 9999; /* Top level */
+    z-index: 9999;
     transition: opacity 0.3s ease;
 }
 
