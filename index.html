@@ -3,28 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Habits</title>
+    <title>Life Tracker</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="apple-touch-icon" href="icon.png"> <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Habits</h1>
-            <button id="menuBtn">☰</button>
-        </header>
 
-        <div id="week-header" class="days-row">
-            <div class="habit-name-spacer"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="profile-section">
+            <div class="avatar-placeholder">AL</div>
+            <div class="profile-info">
+                <div class="name">Alessandro</div>
+                <div class="username">@alelife</div>
             </div>
-
-        <div id="habits-list">
-            </div>
-
-        <div class="actions">
-            <input type="text" id="newHabitName" placeholder="New habit...">
-            <button onclick="addNewHabit()">+</button>
         </div>
+        <nav>
+            <button onclick="router('habits')" class="nav-btn active">Habits</button>
+            <button onclick="router('health')" class="nav-btn">Health</button>
+            <button onclick="router('workout')" class="nav-btn">Workout</button>
+            <button onclick="router('diet')" class="nav-btn">Diet</button>
+        </nav>
+        <div class="settings-section">
+            <button class="nav-btn">⚙️ Settings</button>
+        </div>
+    </div>
+
+    <div id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="main-container">
+        <header>
+            <button id="menuBtn" onclick="toggleSidebar()">☰</button>
+            <h1 id="page-title">Habits</h1>
+            <div style="width: 24px;"></div> </header>
+
+        <section id="habits-view" class="view active-view">
+            <div id="week-header" class="days-row"></div>
+            <div id="habits-list">Loading...</div>
+            <div class="actions">
+                <input type="text" id="newHabitName" placeholder="Nuova abitudine...">
+                <button onclick="handleAddHabit()">+</button>
+            </div>
+        </section>
+
+        <section id="health-view" class="view">
+            <div class="card">
+                <h3>Nuova Misurazione</h3>
+                <div class="form-grid">
+                    <select id="healthType">
+                        <option value="Peso">Peso (kg)</option>
+                        <option value="Sonno">Sonno (ore)</option>
+                        <option value="Stress">Stress (1-10)</option>
+                        <option value="BPM">BPM</option>
+                        <option value="HRV">HRV</option>
+                    </select>
+                    <input type="number" id="healthValue" placeholder="Valore" step="0.1">
+                    <input type="text" id="healthNotes" placeholder="Note (opzionale)">
+                    <button class="btn-primary" onclick="handleAddMetric()">Salva</button>
+                </div>
+            </div>
+            <div id="health-list" class="log-list"></div>
+        </section>
+
+        <section id="workout-view" class="view">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('workout', 'log')">Session Log</button>
+                <button class="tab-btn" onclick="switchTab('workout', 'db')">Esercizi DB</button>
+            </div>
+
+            <div id="workout-log-tab" class="tab-content active">
+                <div class="card">
+                    <select id="workoutExerciseSelect"><option>Caricamento esercizi...</option></select>
+                    <div class="input-row">
+                        <input type="number" id="woWeight" placeholder="kg">
+                        <input type="number" id="woReps" placeholder="Reps">
+                        <input type="number" id="woSets" placeholder="Sets">
+                    </div>
+                    <input type="number" id="woRPE" placeholder="RPE (1-10)">
+                    <button class="btn-primary" onclick="handleLogWorkout()">Registra Set</button>
+                </div>
+                <div id="workout-history" class="log-list"></div>
+            </div>
+
+            <div id="workout-db-tab" class="tab-content">
+                <div class="card">
+                    <h3>Nuovo Esercizio</h3>
+                    <input type="text" id="exName" placeholder="Nome Esercizio">
+                    <select id="exMuscle">
+                        <option value="Pecs">Pettorali</option>
+                        <option value="Back">Dorsali</option>
+                        <option value="Legs">Gambe</option>
+                        <option value="Arms">Braccia</option>
+                        <option value="Shoulders">Spalle</option>
+                    </select>
+                    <select id="exPattern">
+                        <option value="Push">Push</option>
+                        <option value="Pull">Pull</option>
+                        <option value="Squat">Squat</option>
+                        <option value="Hinge">Hinge</option>
+                    </select>
+                    <button class="btn-primary" onclick="handleAddExercise()">Aggiungi al DB</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="diet-view" class="view">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('diet', 'log')">Daily Log</button>
+                <button class="tab-btn" onclick="switchTab('diet', 'db')">Food DB</button>
+            </div>
+
+            <div id="diet-log-tab" class="tab-content active">
+                <div class="card">
+                    <select id="dietFoodSelect"><option>Caricamento cibi...</option></select>
+                    <input type="number" id="dietQty" placeholder="Quantità (es: 1.5 per una porzione e mezza)">
+                    <button class="btn-primary" onclick="handleLogFood()">Mangia</button>
+                </div>
+                <div id="diet-history" class="log-list"></div>
+            </div>
+
+            <div id="diet-db-tab" class="tab-content">
+                <div class="card">
+                    <h3>Nuovo Cibo</h3>
+                    <input type="text" id="foodName" placeholder="Nome Cibo">
+                    <input type="text" id="foodBrand" placeholder="Marca">
+                    <div class="input-row">
+                        <input type="number" id="foodServing" placeholder="Porzione (g/ml)">
+                        <input type="number" id="foodCals" placeholder="Kcal">
+                    </div>
+                    <div class="input-row">
+                        <input type="number" id="foodProt" placeholder="Prot">
+                        <input type="number" id="foodCarbs" placeholder="Carbo">
+                        <input type="number" id="foodFat" placeholder="Grassi">
+                    </div>
+                    <button class="btn-primary" onclick="handleAddFood()">Salva nel DB</button>
+                </div>
+            </div>
+        </section>
+
     </div>
     <script src="app.js"></script>
 </body>
