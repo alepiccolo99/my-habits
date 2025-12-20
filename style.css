@@ -1,56 +1,31 @@
 :root {
-    /* Palette ispirata all'immagine di riferimento */
-    --bg-main: #000000;       /* Sfondo principale profondo */
-    --bg-card: #1c1c1e;       /* Sfondo delle card */
-    --bg-input: #2c2c2e;      /* Sfondo campi di input */
-    --text-primary: #ffffff;  /* Testo principale */
-    --text-secondary: #8e8e93;/* Testo secondario/etichette */
-    --accent: #ffffff;        /* Accento bianco per bottoni e icone attive */
-    --border-color: #38383a;  /* Colore bordi sottili */
-    --success: #30d158;       /* Verde per i check */
+    /* Base Colors */
+    --bg-main: #000000;
+    --bg-card: #1c1c1e;
+    --bg-input: #2c2c2e;
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
+    --border-color: #38383a;
     
-    /* Spaziature e Arrotondamenti */
+    /* Dynamic Theme Defaults (Will be overwritten by JS) */
+    --accent-color: #0a84ff; 
+    --accent-dim: rgba(10, 132, 255, 0.2);
+
+    /* Dimensions */
     --card-radius: 16px;
     --btn-radius: 12px;
-    --input-radius: 10px;
-    --padding-page: 20px;
 }
 
 body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased; /* Rende i font più nitidi su Mac/iOS */
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* --- TIPOGRAFIA --- */
-h1, h2, h3 { font-weight: 600; margin: 0; }
-h1 { font-size: 22px; }
-h3 { font-size: 18px; margin-bottom: 15px; }
-.text-label { color: var(--text-secondary); font-size: 14px; }
-.text-value { color: var(--text-primary); font-size: 16px; font-weight: 500; }
-
-/* --- COMPONENTI GLOBALI --- */
-
-/* Header */
-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px var(--padding-page);
-    background: rgba(0, 0, 0, 0.8); /* Sfondo header semi-trasparente */
-    backdrop-filter: blur(20px);    /* Effetto sfocatura iOS */
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid var(--border-color);
-}
-#menuBtn { background: none; border: none; color: var(--text-primary); font-size: 24px; cursor: pointer; padding: 0;}
-
-/* Sidebar */
+/* --- LAYOUT & SIDEBAR --- */
 .sidebar {
     position: fixed; top: 0; left: 0; width: 280px; height: 100%;
     background: var(--bg-card); z-index: 1000;
@@ -67,112 +42,113 @@ header {
 
 .profile-section { padding: 40px 20px 30px; text-align: center; border-bottom: 1px solid var(--border-color); }
 .avatar {
-    width: 70px; height: 70px; background: var(--input-radius); border-radius: 50%;
-    margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: 24px; color: var(--text-primary); background-color: var(--bg-input);
+    width: 60px; height: 60px; background: var(--bg-input); border-radius: 50%;
+    margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 20px; color: var(--accent-color);
 }
-.name { font-weight: 600; font-size: 20px; margin-bottom: 4px;}
-.username { color: var(--text-secondary); font-size: 15px; }
+.name { font-weight: 600; font-size: 18px; }
+.username { color: var(--text-secondary); font-size: 14px; }
 
 nav { flex: 1; padding: 20px 10px; }
 .nav-btn {
     width: 100%; padding: 12px 15px; background: none; border: none;
-    text-align: left; color: var(--text-secondary); font-size: 17px; font-weight: 500;
-    cursor: pointer; border-radius: var(--btn-radius); transition: all 0.2s;
+    text-align: left; color: var(--text-secondary); font-size: 16px; font-weight: 500;
+    cursor: pointer; border-radius: var(--btn-radius); margin-bottom: 5px;
 }
-.nav-btn.active { background: var(--bg-input); color: var(--text-primary); }
-.settings-section { padding: 20px; border-top: 1px solid var(--border-color); }
+.nav-btn.active { background: var(--bg-input); color: var(--accent-color); }
 
-/* Main Container & Views */
-.main-container { padding: var(--padding-page); padding-bottom: 80px; }
+/* --- HEADER & MAIN --- */
+header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+    position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color);
+}
+#menuBtn { background: none; border: none; color: var(--text-primary); font-size: 24px; cursor: pointer; }
+h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.action-btn { background: none; border: none; color: var(--accent-color); font-size: 24px; cursor: pointer; }
+
+.main-container { padding: 20px; padding-bottom: 80px; }
 .view { display: none; animation: fadeIn 0.3s ease-out; }
 .view.active-view { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Cards & Forms */
-.card {
-    background: var(--bg-card);
-    padding: 20px;
-    border-radius: var(--card-radius);
-    margin-bottom: 20px;
-    /* border: 1px solid var(--border-color); */ /* Opzionale: bordo sottile */
-}
+/* --- CARDS & FORMS --- */
+.card { background: var(--bg-card); padding: 20px; border-radius: var(--card-radius); margin-bottom: 20px; }
+h3 { margin-top: 0; font-size: 18px; margin-bottom: 15px; }
 
 input, select {
     width: 100%; padding: 14px; margin-bottom: 12px;
-    background: var(--bg-input); border: none;
-    border-radius: var(--input-radius); color: var(--text-primary);
-    box-sizing: border-box; font-size: 16px; font-family: inherit;
-    -webkit-appearance: none; /* Rimuove stile default su iOS */
+    background: var(--bg-input); border: none; border-radius: 10px;
+    color: var(--text-primary); font-size: 16px; box-sizing: border-box;
 }
-input::placeholder { color: var(--text-secondary); }
-.input-row { display: flex; gap: 12px; }
-
-/* Bottoni */
 .btn-primary {
-    width: 100%; padding: 16px;
-    background: var(--accent); color: var(--bg-main);
-    border: none; border-radius: var(--btn-radius);
-    font-weight: 600; font-size: 17px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: opacity 0.2s;
+    width: 100%; padding: 16px; background: var(--accent-color); color: white;
+    border: none; border-radius: var(--btn-radius); font-weight: 600; font-size: 16px; cursor: pointer;
 }
-.btn-primary:active { opacity: 0.8; }
 
-/* Tabs */
-.tabs { display: flex; margin-bottom: 20px; background: var(--bg-input); padding: 4px; border-radius: var(--btn-radius); }
-.tab-btn {
-    flex: 1; background: none; border: none; padding: 10px;
-    color: var(--text-secondary); border-radius: 10px;
-    cursor: pointer; font-weight: 500; font-size: 15px; transition: all 0.2s;
+/* --- HABIT DASHBOARD (VIEW 1) --- */
+.habit-grid-header, .habit-row {
+    display: grid; 
+    grid-template-columns: 1fr repeat(5, 45px); /* Name + 5 Days */
+    gap: 8px; align-items: center;
 }
-.tab-btn.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.habit-grid-header { margin-bottom: 10px; text-align: center; }
+.day-col { display: flex; flex-direction: column; align-items: center; }
+.day-name { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; font-weight: 700; }
+.day-num { font-size: 14px; font-weight: 600; margin-top: 2px; }
 
-/* --- SEZIONI SPECIFICHE --- */
+.habit-row { 
+    background: var(--bg-card); margin-bottom: 8px; 
+    padding: 10px; border-radius: 12px; 
+    height: 40px;
+}
+.habit-name { font-weight: 500; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.habit-check {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-input); 
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: transparent; font-size: 18px;
+    transition: all 0.2s;
+}
+.habit-check.checked { background: var(--accent-color); color: white; }
 
-/* Liste di Log (Health, Workout, Diet) */
-.log-list { display: flex; flex-direction: column; gap: 10px; }
-.log-item {
-    background: var(--bg-card); padding: 16px;
-    border-radius: var(--card-radius); display: flex;
-    justify-content: space-between; align-items: center;
-}
-.log-main-text { font-size: 17px; font-weight: 500; }
-.log-sub-text { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
-.log-value { font-size: 18px; font-weight: 600; }
+/* --- HABIT DETAIL (VIEW 2) --- */
+.detail-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.back-btn { background: none; border: none; color: var(--text-primary); font-size: 24px; cursor: pointer; }
 
-/* Dettagli in stile "Lista" (come nell'immagine per Health) */
-.details-list { display: flex; flex-direction: column; }
-.detail-item {
-    display: flex; justify-content: space-between;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-.detail-item:last-child { border-bottom: none; }
+/* Stats Row */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-box { background: var(--bg-card); padding: 15px; border-radius: 12px; text-align: center; }
+.stat-val { font-size: 20px; font-weight: 700; color: var(--accent-color); }
+.stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
-/* Habits Grid */
-.days-row { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 4px; text-align: center; margin-bottom: 10px; }
-.day-label { color: var(--text-secondary); font-size: 13px; font-weight: 500; }
-.day-number { color: var(--text-primary); font-size: 16px; font-weight: 600; margin-top: 2px; }
+/* Calendar */
+.calendar-grid { 
+    display: grid; grid-template-columns: repeat(7, 1fr); 
+    gap: 5px; text-align: center; margin-top: 10px; 
+}
+.cal-day-header { color: var(--text-secondary); font-size: 12px; margin-bottom: 5px; }
+.cal-day { 
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
+    font-size: 14px; border-radius: 50%; 
+}
+.cal-day.active { background: var(--accent-color); color: white; }
+.cal-day.today { border: 1px solid var(--accent-color); }
 
-.habit-row {
-    display: grid; grid-template-columns: 120px repeat(5, 1fr);
-    background: var(--bg-card); margin-bottom: 6px;
-    border-radius: 12px; align-items: stretch; overflow: hidden;
-    height: 56px; /* Altezza fissa per righe uniformi */
-}
-.habit-label {
-    padding: 0 16px; display: flex; align-items: center;
-    font-size: 16px; font-weight: 500;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.cell {
-    display: flex; justify-content: center; align-items: center;
-    cursor: pointer; font-size: 20px;
-    border-left: 1px solid var(--border-color);
-    transition: background-color 0.2s, color 0.2s;
-}
-.cell.checked { background: rgba(48, 209, 88, 0.15); color: var(--success); }
-.cell.empty { color: var(--text-secondary); }
+/* Heatmap */
+.heatmap-container { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 10px; justify-content: center;}
+.heat-box { width: 12px; height: 12px; border-radius: 2px; background: var(--bg-input); }
+.heat-box.filled { background: var(--accent-color); }
+
+/* --- SETTINGS COLOR PICKER --- */
+.color-grid { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+.color-opt { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+.color-opt.selected { border-color: white; transform: scale(1.1); }
+
+/* --- TABS & GENERIC LISTS --- */
+.tabs { display: flex; background: var(--bg-input); padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+.tab-btn { flex: 1; padding: 8px; border: none; background: none; color: var(--text-secondary); border-radius: 8px; cursor: pointer; }
+.tab-btn.active { background: var(--bg-card); color: var(--text-primary); }
+
+.log-item { background: var(--bg-card); padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+.log-meta { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
