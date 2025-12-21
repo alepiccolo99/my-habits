@@ -86,9 +86,9 @@
 
             <div class="card">
                 <div class="calendar-header">
-                    <button onclick="changeCalendarMonth(-1)">&#8249;</button>
+                    <button class="btn-text-gray" onclick="changeCalendarMonth(-1)">&#8249;</button>
                     <h3 id="cal-month-name">Month</h3>
-                    <button onclick="changeCalendarMonth(1)">&#8250;</button>
+                    <button class="btn-text-gray" onclick="changeCalendarMonth(1)">&#8250;</button>
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
             </div>
@@ -102,16 +102,14 @@
             <div style="width:50px"></div>
         </div>
         <div class="modal-content">
-            <div class="card">
-                <div class="setting-row">
-                    <div class="setting-text">
-                        <h3>Accent Color</h3>
-                        <p>Select a color to update the theme.</p>
-                    </div>
-                    <div class="color-picker-container">
-                        <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
-                        <div id="color-visual-circle" class="color-circle"></div>
-                    </div>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:16px; font-weight:600; margin-bottom:4px;">Accent Color</div>
+                    <div style="font-size:12px; color:var(--text-secondary);">Select a color to update the theme.</div>
+                </div>
+                <div class="color-btn-wrapper">
+                    <svg id="color-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-color)"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                    <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
                 </div>
             </div>
         </div>
