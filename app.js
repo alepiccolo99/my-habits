@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykgK5BCw0HyiNnk-M5webXjuTV4wXzx4brJmaRmOrlug661Xrw0cFlW-d3pkuIOQWnjw/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRbSlMIzyd-3hAzirBIkQub8CnYriwoAIhBbNvOwnhNeKWrM80IEy0J7NrZLWqET9K_g/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
@@ -91,7 +91,9 @@ function renderHabitDashboard() {
             ${days.map(d => {
                 const dateStr = getLocalDateString(d);
                 const checked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
-                return `<div class="cell ${checked ? 'checked' : ''}" onclick="toggleHabit('${id}', '${dateStr}', this)">${checked ? '✔' : ''}</div>`;
+                // FIXED: Default gray '✕', Checked colored '✔'
+                const symbol = checked ? '✔' : '✕';
+                return `<div class="cell ${checked ? 'checked' : ''}" onclick="toggleHabit('${id}', '${dateStr}', this)">${symbol}</div>`;
             }).join('')}
         </div>`;
     }).join('');
@@ -102,14 +104,14 @@ function renderHabitDashboard() {
 async function toggleHabit(id, dateStr, el) {
     const isChecked = el.classList.contains('checked');
     
-    // Optimistic UI
+    // Optimistic UI - Update symbol logic
     if (isChecked) {
         el.classList.remove('checked');
-        el.innerText = '';
+        el.innerText = '✕'; // Back to gray cross
         appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]) === dateStr));
     } else {
         el.classList.add('checked');
-        el.innerText = '✔';
+        el.innerText = '✔'; // To colored tick
         appData.habitLogs.push([id, dateStr, 1]);
     }
     
@@ -128,7 +130,6 @@ async function handleAddHabit() {
     const freq = document.getElementById('newHabitFreq').value;
     const target = document.getElementById('newHabitTarget').value;
     
-    // Optimistic
     appData.habits.push([id, name, freq, target]);
     document.getElementById('add-habit-modal').style.display='none';
     renderHabitDashboard();
@@ -155,14 +156,10 @@ async function saveHabitConfig() {
     await sendData({ action: 'updateHabit', id: currentHabitId, name, frequency: freq, target });
 }
 
-// --- DELETE (Cascade) ---
 async function deleteCurrentHabit() {
     if(!confirm("Delete this habit and ALL its history? This cannot be undone.")) return;
     
-    // 1. Remove from local habits
     appData.habits = appData.habits.filter(h => String(h[0]) !== String(currentHabitId));
-    
-    // 2. Remove from local logs
     appData.habitLogs = appData.habitLogs.filter(l => String(l[0]) !== String(currentHabitId));
     
     closeHabitModal();
@@ -202,7 +199,6 @@ function renderHabitStats(id) {
     
     document.getElementById('stat-total').innerText = logs.length;
     
-    // Streak Logic (Strict Local Date)
     let streak = 0; 
     const today = getLocalDateString(new Date()); 
     let checkDate = new Date();
@@ -217,7 +213,6 @@ function renderHabitStats(id) {
     }
     document.getElementById('stat-streak').innerText = streak;
     
-    // Monthly Rate
     const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const recent = logs.filter(d => d >= getLocalDateString(thirtyDaysAgo));
     document.getElementById('stat-rate').innerText = Math.round((recent.length / 30) * 100) + "%";
@@ -260,23 +255,23 @@ function renderCalendar(id) {
 function openSettings() { 
     document.getElementById('settings-modal').style.display = 'block'; 
     document.getElementById('themeColorPicker').value = currentTheme; 
+    document.getElementById('color-icon').style.color = currentTheme;
 }
 function openAddHabitModal() { document.getElementById('newHabitName').value = ""; document.getElementById('add-habit-modal').style.display = 'block'; }
 
 function updateThemeFromPicker(color) { 
     applyTheme(color); 
     localStorage.setItem('theme', color); 
+    // Update the icon color immediately
+    const icon = document.getElementById('color-icon');
+    if(icon) icon.style.color = color;
+    
     sendData({ action: 'saveSetting', key: 'theme', value: color }); 
 }
 
 function applyTheme(color) {
     currentTheme = color; 
     document.documentElement.style.setProperty('--accent-color', color);
-    
-    // Update the visual circle in settings
-    const circle = document.getElementById('color-visual-circle');
-    if(circle) circle.style.backgroundColor = color;
-
     if(color.startsWith('#') && color.length === 7) {
         const r = parseInt(color.substr(1,2), 16); 
         const g = parseInt(color.substr(3,2), 16); 
