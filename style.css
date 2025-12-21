@@ -26,12 +26,26 @@ header {
     z-index: 100;
 }
 header h1 { font-size: 20px; font-weight: 700; margin: 0; }
-.icon-btn { background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center;}
-#header-drop-icon { color: var(--accent-color); filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
 
-/* Add Button (Dark Gray Circle, Black Icon) */
+/* Color Picker Button Wrapper (Header) */
+.color-btn-wrapper {
+    position: relative;
+    width: 32px; height: 32px;
+    background: #3a3a3c; /* Dark Gray Circle */
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+.color-btn-wrapper input[type="color"] {
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    opacity: 0; cursor: pointer;
+}
+#header-drop-icon { color: var(--accent-color); }
+
+/* Add Button */
 .add-btn-circle {
-    background-color: #3a3a3c; /* Dark Gray */
+    background-color: #3a3a3c; 
     width: 32px; height: 32px;
     border-radius: 50%;
     border: none;
@@ -53,10 +67,7 @@ header h1 { font-size: 20px; font-weight: 700; margin: 0; }
     height: auto;
 }
 
-/* List Container with margin top to separate from dates */
-#habits-list {
-    margin-top: 15px; /* Separation from dates */
-}
+#habits-list { margin-top: 15px; }
 
 .habit-row { 
     display: grid; 
@@ -67,7 +78,7 @@ header h1 { font-size: 20px; font-weight: 700; margin: 0; }
     border-radius: var(--card-radius);
     padding: 0 8px; 
     margin-bottom: 6px;
-    height: 40px; /* Reduced Height */
+    height: 40px; 
 }
 
 .habit-label { 
@@ -86,55 +97,36 @@ header h1 { font-size: 20px; font-weight: 700; margin: 0; }
     display: flex; align-items: center; justify-content: center; 
     cursor: pointer; 
     margin: 0 auto;
-    font-family: Arial, sans-serif; /* Ensures symbols look standard */
-    font-size: 20px; /* Same size for X and Tick */
-    color: #48484a; /* Default Dim Gray for X */
+    font-family: Arial, sans-serif; 
+    font-size: 20px; 
+    color: #48484a; 
     background: transparent;
     transition: transform 0.1s;
     user-select: none;
 }
 .cell.checked { 
-    color: var(--accent-color); /* Theme Color for Tick */
-    font-weight: 400; /* Regular weight for clean look */
+    color: var(--accent-color); 
+    font-weight: 400; 
 }
 .cell:active { transform: scale(0.9); }
 
-/* Custom Select Dropdown */
+/* UI Elements */
+.card { background: var(--bg-card); padding: 16px; border-radius: var(--card-radius); margin-bottom: 16px; }
+.transparent-card { background: transparent; padding: 0; }
+
 select { 
     width: 100%; padding: 12px; background: var(--bg-input); border: none; border-radius: 10px; color: #fff; margin-bottom: 10px; box-sizing: border-box; font-size: 16px;
-    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    appearance: none; -webkit-appearance: none;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%238e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 16px;
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
 }
 input { width: 100%; padding: 12px; background: var(--bg-input); border: none; border-radius: 10px; color: #fff; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
 .input-row { display: flex; gap: 10px; }
 
-/* Modals */
-.modal { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; overflow-y: auto; }
-.modal-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; background: #000; position: sticky; top: 0; }
-.modal-content { padding: 20px; max-width: 600px; margin: 0 auto; }
-
-/* Buttons & UI */
 .btn-primary { background: var(--accent-color); color: #000; border: none; border-radius: 30px; padding: 14px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; }
 .btn-delete { background: transparent; color: #ff453a; border: 1px solid #ff453a; border-radius: 30px; padding: 14px; width: 100%; font-weight: 600; margin-top: 10px; }
 .btn-text { background: none; border: none; color: var(--text-primary); font-size: 16px; cursor: pointer; }
 .btn-text-gray { background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer; padding: 0 10px; }
-
-/* Color Picker Button Wrapper */
-.color-btn-wrapper {
-    position: relative;
-    width: 40px; height: 40px;
-    background: var(--bg-input);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-}
-.color-btn-wrapper input[type="color"] {
-    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    opacity: 0; cursor: pointer;
-}
 
 /* Stats & Calendar */
 .stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
@@ -147,6 +139,20 @@ input { width: 100%; padding: 12px; background: var(--bg-input); border: none; b
 .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; color: #fff; }
 .cal-day.active { background: var(--accent-color); color: #000; font-weight: bold; }
 .cal-day.today { border: 1px solid var(--accent-color); }
+
+/* Heatmap */
+.heatmap-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(12px, 1fr)); 
+    gap: 4px; 
+    margin-top: 10px; 
+}
+.heat-box { 
+    aspect-ratio: 1; 
+    background: var(--bg-input); 
+    border-radius: 2px; 
+}
+.heat-box.filled { background: var(--accent-color); }
 
 /* Loading */
 #loading-overlay { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
