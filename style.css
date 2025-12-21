@@ -8,7 +8,7 @@
     
     /* Default Accent */
     --accent-color: #0a84ff; 
-    /* Accent Background (kept if needed, but styling is cleaner now) */
+    /* Default Accent Background (will be updated by JS) */
     --accent-color-bg: rgba(10, 132, 255, 0.2); 
     
     --card-radius: 16px;
@@ -34,10 +34,48 @@ button, .stat-val {
     color: var(--text-primary); 
 }
 
-/* FIX: Cell Styles to match the Image (X vs Check) */
+/* FIX #4: Background uses transparent accent variable, Tick uses solid accent */
+.cell.checked {
+    background-color: var(--accent-color-bg) !important;
+    color: var(--accent-color) !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+    font-weight: 900;
+    opacity: 1;
+}
+
+/* FIX #1: Header Day Highlight wrapper */
+.day-wrapper-header {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    border-radius: 10px; /* Slightly rounded */
+    padding: 6px 4px;    /* Tighter padding */
+    border: 1px solid transparent; /* Invisible border by default to prevent layout shift */
+}
+
+.day-wrapper-header.current {
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(255,255,255,0.05); /* Very subtle background for current day */
+}
+
+/* FIX #2: Reduced Height for Habits and Ticks */
+.habit-label { 
+    background: var(--bg-card); 
+    min-height: 36px; /* Reduced from 42px */
+    display: flex; 
+    align-items: center; 
+    padding-left: 15px; 
+    border-radius: 8px; /* Slightly tighter radius for smaller height */
+    font-weight: 500; 
+    cursor: pointer; 
+    font-size: 15px; /* Slightly smaller font for balance */
+}
+
 .cell { 
     background: var(--bg-card); 
-    min-height: 36px; 
+    min-height: 36px; /* Reduced from 42px */
     border-radius: 8px; 
     display: flex; 
     align-items: center; 
@@ -45,50 +83,7 @@ button, .stat-val {
     font-size: 18px; 
     cursor: pointer; 
     transition: 0.2s; 
-    
-    /* Default State (Unchecked): Grey X */
-    color: var(--text-secondary); 
-    font-weight: 400; /* Regular weight for X */
-}
-
-/* Checked State: Accent Checkmark */
-.cell.checked {
-    color: var(--accent-color) !important;
-    -webkit-text-fill-color: var(--accent-color) !important;
-    font-weight: 900; /* Bold for checkmark */
-    opacity: 1;
-    /* Removed background color to match the clean look of the image */
-    background: var(--bg-card); 
-}
-
-/* Header Day Highlight (Keep as requested) */
-.day-wrapper-header {
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center;
-    border-radius: 10px; 
-    padding: 6px 4px;    
-    border: 1px solid transparent; 
-}
-
-.day-wrapper-header.current {
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    background: rgba(255,255,255,0.05); 
-}
-
-/* Reduced Height for Habits */
-.habit-label { 
-    background: var(--bg-card); 
-    min-height: 36px; 
-    display: flex; 
-    align-items: center; 
-    padding-left: 15px; 
-    border-radius: 8px; 
-    font-weight: 500; 
-    cursor: pointer; 
-    font-size: 15px; 
+    color: transparent; 
 }
 
 #loading-overlay {
@@ -154,6 +149,10 @@ button, .stat-val {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.btn-header-add {
+    /* Removed custom class to enforce btn-secondary style */
 }
 
 .btn-text-gray {
