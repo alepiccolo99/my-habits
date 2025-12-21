@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRbSlMIzyd-3hAzirBIkQub8CnYriwoAIhBbNvOwnhNeKWrM80IEy0J7NrZLWqET9K_g/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUn2YlTK1EOPpQvQ71tG3zgBo7Z5N2YvDUrG0oEMua44SuTSUSQXOz3mewk9eSuVgv2Q/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
