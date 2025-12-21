@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx73oRxWNRo8fsWPmMFllJR-Ly-FTDX4pJh_n3ajvrYw_RM4pNmA8RMoAYuoPf5AVQxwg/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXtZ_wN31CfzyOWW4yYPw1rtA22Tvh3_j2PXWamQHHK-QW-TFuGfFxHyXvHQQEYK-UFw/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
@@ -44,8 +44,7 @@ async function fetchData() {
     }
 }
 
-// --- RENDER ---
-
+// --- RENDER DASHBOARD ---
 function getRecentDays(n) {
     const dates = [];
     for(let i=0; i<n; i++) {
@@ -94,7 +93,6 @@ function renderHabitDashboard() {
 }
 
 // --- ACTIONS ---
-
 async function toggleHabit(id, dateStr, el) {
     const isChecked = el.classList.contains('checked');
     
@@ -150,15 +148,17 @@ async function saveHabitConfig() {
 
 async function deleteCurrentHabit() {
     if(!confirm("Delete this habit and ALL its history? This cannot be undone.")) return;
+    
     appData.habits = appData.habits.filter(h => String(h[0]) !== String(currentHabitId));
     appData.habitLogs = appData.habitLogs.filter(l => String(l[0]) !== String(currentHabitId));
+    
     closeHabitModal();
     renderHabitDashboard();
+    
     await sendData({ action: 'deleteHabit', id: currentHabitId });
 }
 
 // --- DETAILS & STATS ---
-
 function openHabitDetail(id) {
     currentHabitId = id;
     const habit = appData.habits.find(h => String(h[0]) === String(id));
@@ -187,7 +187,11 @@ function toggleEditHabit() {
 function renderHabitStats(id) {
     const logs = appData.habitLogs.filter(l => String(l[0]) === String(id)).map(l => String(l[1])).sort();
     document.getElementById('stat-total').innerText = logs.length;
-    let streak = 0; const today = getLocalDateString(new Date()); let checkDate = new Date();
+    
+    let streak = 0; 
+    const today = getLocalDateString(new Date()); 
+    let checkDate = new Date();
+    
     if (logs.includes(today)) streak = 1; 
     let limit = 365;
     while(limit > 0) {
@@ -197,6 +201,7 @@ function renderHabitStats(id) {
         limit--;
     }
     document.getElementById('stat-streak').innerText = streak;
+    
     const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const recent = logs.filter(d => d >= getLocalDateString(thirtyDaysAgo));
     document.getElementById('stat-rate').innerText = Math.round((recent.length / 30) * 100) + "%";
@@ -226,26 +231,28 @@ function renderCalendar(id) {
 
 function renderHeatmap(id) {
     if(!id) id = currentHabitId;
-    const rangeVal = document.getElementById('heatmap-select').value;
-    const grid = document.getElementById('heatmap-grid');
+    const mode = document.getElementById('heatmap-select').value; 
+    const grid = document.getElementById('heatmap-grid'); 
     grid.innerHTML = '';
-
-    const today = new Date();
+    
+    const today = new Date(); 
     let startDate = new Date();
+    
+    if (mode === 'month') { startDate.setMonth(today.getMonth() - 1); } 
+    else if (mode === '3months') { startDate.setMonth(today.getMonth() - 3); } 
+    else if (mode === 'year') { startDate.setFullYear(today.getFullYear() - 1); } 
+    else if (mode === 'all') { startDate = new Date(today.getFullYear(), 0, 1); } // Start of this year for simplicity
 
-    if (rangeVal === '30') startDate.setDate(today.getDate() - 30);
-    else if (rangeVal === '90') startDate.setDate(today.getDate() - 90);
-    else if (rangeVal === '365') startDate.setDate(today.getDate() - 365);
-    else if (rangeVal === 'all') startDate = new Date('2024-01-01'); // Fixed start for "All Time" simplicity
-
-    const diffTime = Math.abs(today - startDate);
+    const diffTime = Math.abs(today - startDate); 
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+    
     for(let i=0; i<=diffDays; i++) {
-        const d = new Date(startDate);
+        const d = new Date(startDate); 
         d.setDate(startDate.getDate() + i);
-        const dateStr = getLocalDateString(d);
+        const dateStr = getLocalDateString(d); 
         const isChecked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
+        
+        // Use standard date title for tooltip
         grid.innerHTML += `<div class="heat-box ${isChecked?'filled':''}" title="${dateStr}"></div>`;
     }
 }
@@ -263,10 +270,9 @@ function applyTheme(color) {
     currentTheme = color; 
     document.documentElement.style.setProperty('--accent-color', color);
     
-    // Update icons
     const headerDrop = document.getElementById('header-drop-icon');
     if(headerDrop) headerDrop.style.color = color;
-
+    
     if(color.startsWith('#') && color.length === 7) {
         const r = parseInt(color.substr(1,2), 16); 
         const g = parseInt(color.substr(3,2), 16); 
