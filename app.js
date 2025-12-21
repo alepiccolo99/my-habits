@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJvhxX4W1UIHTw7CdKZt6a9-Ii-V5c6aqPqwOnDjNpncD3HtkBEPNcMLKzteHQ5FgXQw/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx0fnSmgxAQgQUvt2yPHfP9TfBcJQlNq3WVaFOxArWDOPqf0jSsnQh0rpmlbwHG_JrvOA/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], healthMetrics: [], healthLogs: [], settings: [] };
@@ -11,6 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme(currentTheme); 
     fetchData();
 });
+
+// --- DATE HELPER (THE FIX) ---
+// Returns YYYY-MM-DD in LOCAL time, preventing the -1 day UTC bug
+function getLocalDateString(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 async function fetchData() {
     const loader = document.getElementById('loading-overlay');
@@ -97,10 +106,11 @@ function renderHabitDashboard() {
     }
 
     const days = getRecentDays(5);
-    const todayStr = new Date().toDateString(); 
+    const todayStr = getLocalDateString(new Date()); 
     
     header.innerHTML = '<div></div>' + days.map(d => {
-        const isToday = d.toDateString() === todayStr;
+        const dStr = getLocalDateString(d);
+        const isToday = dStr === todayStr;
         return `<div class="day-wrapper-header ${isToday ? 'current' : ''}"><div class="day-name">${d.toLocaleDateString('en-US', {weekday:'short'})}</div><div class="day-num">${d.getDate()}</div></div>`;
     }).join('');
 
@@ -109,8 +119,8 @@ function renderHabitDashboard() {
         return `<div class="habit-row">
             <div class="habit-label" onclick="openHabitDetail('${id}')">${name}</div>
             ${days.map(d => {
-                const dateStr = d.toISOString().split('T')[0];
-                const checked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]).startsWith(dateStr));
+                const dateStr = getLocalDateString(d); // FIXED: Use local string
+                const checked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
                 const symbol = checked ? '✔' : '✕';
                 return `<div class="cell ${checked ? 'checked' : ''}" onclick="toggleHabit('${id}', '${dateStr}', this)">${symbol}</div>`;
             }).join('')}
@@ -118,16 +128,20 @@ function renderHabitDashboard() {
     }).join('');
 }
 
-async function toggleHabit(id, date, el) {
+async function toggleHabit(id, dateStr, el) {
     const isChecked = el.classList.contains('checked');
     el.classList.toggle('checked');
     el.innerText = isChecked ? '✕' : '✔';
     
     // Optimistic Update
-    await sendData({ action: 'toggleHabit', habitId: id, date: date });
-    
-    if(isChecked) appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]).startsWith(date)));
-    else appData.habitLogs.push([id, date, 1]);
+    // IMPORTANT: Filter MUST compare strings strictly
+    if(isChecked) {
+        appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]) === dateStr));
+    } else {
+        appData.habitLogs.push([id, dateStr, 1]);
+    }
+
+    await sendData({ action: 'toggleHabit', habitId: id, date: dateStr });
     
     if(document.getElementById('habit-detail-modal').style.display === 'block') { renderHabitStats(id); renderCalendar(id); renderHeatmap(id); }
 }
@@ -138,7 +152,6 @@ function renderHealthDashboard() {
     const list = document.getElementById('health-list');
     const header = document.getElementById('health-week-header');
     
-    // Filter active metrics (index 4 is archived)
     const validMetrics = (appData.healthMetrics || []).filter(m => m[0] && m[1] && m[4] !== true);
 
     if (validMetrics.length === 0) {
@@ -147,10 +160,10 @@ function renderHealthDashboard() {
     }
 
     const days = getRecentDays(5);
-    const todayStr = new Date().toDateString();
+    const todayStr = getLocalDateString(new Date());
 
     header.innerHTML = '<div></div>' + days.map(d => {
-        const isToday = d.toDateString() === todayStr;
+        const isToday = getLocalDateString(d) === todayStr;
         return `<div class="day-wrapper-header ${isToday ? 'current' : ''}"><div class="day-name">${d.toLocaleDateString('en-US', {weekday:'short'})}</div><div class="day-num">${d.getDate()}</div></div>`;
     }).join('');
 
@@ -159,7 +172,7 @@ function renderHealthDashboard() {
         return `<div class="habit-row">
             <div class="habit-label" onclick="openHealthDetail('${id}')">${name} <span style="font-size:12px; color:#666; margin-left:5px"> ${unit || ''}</span></div>
             ${days.map(d => {
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(d); // FIXED
                 const val = getHealthValue(id, dateStr);
                 const displayVal = val !== null ? val : '·';
                 const isEmpty = val === null;
@@ -170,8 +183,7 @@ function renderHealthDashboard() {
 }
 
 function getHealthValue(metricId, dateStr) {
-    // HealthLogs: [date, metricId, value]
-    const log = appData.healthLogs.find(l => String(l[1]) === String(metricId) && String(l[0]).startsWith(dateStr));
+    const log = appData.healthLogs.find(l => String(l[1]) === String(metricId) && String(l[0]) === dateStr);
     return log ? log[2] : null;
 }
 
@@ -182,8 +194,7 @@ async function promptLogHealth(id, dateStr) {
     if (newVal !== null && newVal.trim() !== "") {
         const numVal = parseFloat(newVal);
         
-        // Optimistic Update
-        let logIndex = appData.healthLogs.findIndex(l => String(l[1]) === String(id) && String(l[0]).startsWith(dateStr));
+        let logIndex = appData.healthLogs.findIndex(l => String(l[1]) === String(id) && String(l[0]) === dateStr);
         if (logIndex > -1) {
             appData.healthLogs[logIndex][2] = numVal;
         } else {
@@ -197,6 +208,7 @@ async function promptLogHealth(id, dateStr) {
 }
 
 // --- HEALTH DETAIL & CHART ---
+// Updated to use Local Date logic for filtering
 
 function openHealthDetail(id) {
     currentHealthId = id;
@@ -226,7 +238,6 @@ function toggleEditHealth() {
 }
 
 function renderHealthStats(id) {
-    // Logs: [date, metricId, value]
     const logs = appData.healthLogs.filter(l => String(l[1]) === String(id)).map(l => parseFloat(l[2]));
     
     let avg = 0, min = 0, max = 0;
@@ -254,10 +265,13 @@ function renderHealthChart(id) {
     else if (range === 'month') cutoff.setDate(cutoff.getDate() - 30);
     else if (range === 'year') cutoff.setFullYear(cutoff.getFullYear() - 1);
     else cutoff = new Date('2000-01-01');
+    
+    // Reset hours to avoid time comparison issues
+    cutoff.setHours(0,0,0,0);
 
     const dataPoints = appData.healthLogs
         .filter(l => String(l[1]) === String(id))
-        .map(l => ({ date: new Date(l[0]), val: parseFloat(l[2]) }))
+        .map(l => ({ date: new Date(l[0]), val: parseFloat(l[2]) })) // l[0] is YYYY-MM-DD string
         .filter(d => d.date >= cutoff && !isNaN(d.val))
         .sort((a,b) => a.date - b.date);
 
@@ -266,58 +280,46 @@ function renderHealthChart(id) {
         return;
     }
 
-    // Determine Scales
     let yMin = Math.min(...dataPoints.map(d => d.val));
     let yMax = Math.max(...dataPoints.map(d => d.val));
     if (goal) {
         yMin = Math.min(yMin, goal);
         yMax = Math.max(yMax, goal);
     }
-    // Add padding to Y axis
     const padding = (yMax - yMin) * 0.1;
     yMin -= padding; if(yMin < 0) yMin = 0;
     yMax += padding;
-    if(yMax === yMin) yMax += 1; // Prevent division by zero
+    if(yMax === yMin) yMax += 1;
 
     const w = container.offsetWidth;
     const h = container.offsetHeight;
     const xPad = 30; 
     const yPad = 20; 
 
-    // Helper to map values to SVG coordinates
     const getX = (date) => xPad + ((date - dataPoints[0].date) / (dataPoints[dataPoints.length-1].date - dataPoints[0].date)) * (w - xPad - 10);
     const getY = (val) => h - yPad - ((val - yMin) / (yMax - yMin)) * (h - yPad * 2);
 
-    // Build SVG Path
     let dPath = `M ${getX(dataPoints[0].date)} ${getY(dataPoints[0].val)}`;
     dataPoints.slice(1).forEach(p => {
         dPath += ` L ${getX(p.date)} ${getY(p.val)}`;
     });
 
     let svg = `<svg viewBox="0 0 ${w} ${h}">`;
-    
-    // Draw Goal Line
     if (goal) {
         const yGoal = getY(goal);
         svg += `<line x1="${xPad}" y1="${yGoal}" x2="${w}" y2="${yGoal}" class="chart-goal-line" />`;
         svg += `<text x="${w-5}" y="${yGoal-5}" text-anchor="end" class="chart-text">Goal: ${goal}</text>`;
     }
-
-    // Draw Trend Line
     svg += `<path d="${dPath}" class="chart-line" />`;
-    
-    // Draw Axis Labels
     svg += `<text x="${xPad}" y="${h-5}" class="chart-text">${dataPoints[0].date.toLocaleDateString(undefined, {month:'short', day:'numeric'})}</text>`;
     svg += `<text x="${w-30}" y="${h-5}" class="chart-text">${dataPoints[dataPoints.length-1].date.toLocaleDateString(undefined, {month:'short', day:'numeric'})}</text>`;
     svg += `<text x="0" y="${getY(yMax)+5}" class="chart-text">${Math.round(yMax)}</text>`;
     svg += `<text x="0" y="${getY(yMin)}" class="chart-text">${Math.round(yMin)}</text>`;
-    
     svg += `</svg>`;
     container.innerHTML = svg;
 }
 
-// --- ADD/UPDATE/DELETE HEALTH ---
-
+// --- SHARED HELPERS & MODALS (No changes needed except strict strings) ---
 function openAddHealthModal() {
     document.getElementById('newHealthName').value = "";
     document.getElementById('newHealthUnit').value = "";
@@ -331,9 +333,7 @@ async function handleAddHealth() {
     const id = Date.now().toString();
     const unit = document.getElementById('newHealthUnit').value;
     const goal = document.getElementById('newHealthGoal').value;
-    
     await sendData({ action: 'addHealthMetric', id, name, unit, goal });
-    
     appData.healthMetrics.push([id, name, unit, goal, false]);
     document.getElementById('add-health-modal').style.display='none';
     renderHealthDashboard();
@@ -343,9 +343,7 @@ async function saveHealthConfig() {
     const name = document.getElementById('edit-health-name').value;
     const unit = document.getElementById('edit-health-unit').value;
     const goal = document.getElementById('edit-health-goal').value;
-    
     await sendData({ action: 'updateHealthMetric', id: currentHealthId, name, unit, goal });
-    
     const idx = appData.healthMetrics.findIndex(m => String(m[0]) === String(currentHealthId));
     if(idx > -1) {
         appData.healthMetrics[idx][1] = name;
@@ -364,7 +362,6 @@ async function deleteCurrentHealth() {
     closeHealthModal();
 }
 
-// --- SHARED HELPERS ---
 function openAddHabitModal() { document.getElementById('newHabitName').value = ""; document.getElementById('add-habit-modal').style.display = 'block'; }
 async function handleAddHabit() {
     const name = document.getElementById('newHabitName').value; if(!name) return;
@@ -372,6 +369,7 @@ async function handleAddHabit() {
     await sendData({ action: 'addHabit', id, name, frequency: freq, target });
     appData.habits.push([id, name, freq, target, false]); document.getElementById('add-habit-modal').style.display='none'; renderHabitDashboard();
 }
+
 function openHabitDetail(id) {
     currentHabitId = id; const habit = appData.habits.find(h => String(h[0]) === String(id)); if(!habit) return;
     calendarOffsetDate = new Date(); document.getElementById('modal-habit-title').innerText = habit[1]; document.getElementById('habit-detail-modal').style.display = 'block';
@@ -392,14 +390,24 @@ async function deleteCurrentHabit() {
     const habitIdx = appData.habits.findIndex(h => String(h[0]) === String(currentHabitId)); if(habitIdx > -1) { appData.habits[habitIdx][4] = true; }
     closeHabitModal();
 }
+// Updated with getLocalDateString
 function renderHabitStats(id) {
     const logs = appData.habitLogs.filter(l => String(l[0]) === String(id)).map(l => String(l[1]).substring(0,10)).sort();
     document.getElementById('stat-total').innerText = logs.length;
-    let streak = 0; const today = new Date().toISOString().split('T')[0]; let checkDate = new Date();
-    if (logs.includes(today)) streak = 1; let loopLimit = 365; while(loopLimit > 0) { checkDate.setDate(checkDate.getDate() - 1); const dateStr = checkDate.toISOString().split('T')[0]; if (logs.includes(dateStr)) streak++; else if (dateStr !== today) break; loopLimit--; }
+    let streak = 0; const today = getLocalDateString(new Date()); let checkDate = new Date();
+    if (logs.includes(today)) streak = 1; let loopLimit = 365; 
+    while(loopLimit > 0) { 
+        checkDate.setDate(checkDate.getDate() - 1); 
+        const dateStr = getLocalDateString(checkDate); 
+        if (logs.includes(dateStr)) streak++; else if (dateStr !== today) break; loopLimit--; 
+    }
     document.getElementById('stat-streak').innerText = streak;
-    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); const recentLogs = logs.filter(d => new Date(d) >= thirtyDaysAgo); const rate = Math.round((recentLogs.length / 30) * 100); document.getElementById('stat-rate').innerText = rate + "%";
+    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); 
+    // Rough filter for rate
+    const recentLogs = logs.filter(d => d >= getLocalDateString(thirtyDaysAgo)); 
+    const rate = Math.round((recentLogs.length / 30) * 100); document.getElementById('stat-rate').innerText = rate + "%";
 }
+
 function changeCalendarMonth(delta) { calendarOffsetDate.setMonth(calendarOffsetDate.getMonth() + delta); renderCalendar(currentHabitId); }
 function renderCalendar(id) {
     const grid = document.getElementById('calendar-grid'); grid.innerHTML = ''; const displayDate = new Date(calendarOffsetDate);
@@ -411,8 +419,11 @@ function renderCalendar(id) {
     for(let i=0; i<firstDayIndex; i++) grid.innerHTML += '<div></div>';
     const now = new Date(); const isCurrentMonth = (now.getFullYear() === year && now.getMonth() === month);
     for(let i=1; i<=daysInMonth; i++) {
-        const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        const isChecked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]).startsWith(dStr));
+        // Build manual date string YYYY-MM-DD
+        const currentM = String(month+1).padStart(2,'0');
+        const currentD = String(i).padStart(2,'0');
+        const dStr = `${year}-${currentM}-${currentD}`;
+        const isChecked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dStr);
         const isToday = isCurrentMonth && (i === now.getDate());
         grid.innerHTML += `<div class="cal-day ${isChecked?'active':''} ${isToday?'today':''}">${i}</div>`;
     }
@@ -425,8 +436,8 @@ function renderHeatmap(id) {
     const diffTime = Math.abs(today - startDate); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     for(let i=0; i<=diffDays; i++) {
         const d = new Date(startDate); d.setDate(startDate.getDate() + i); if (d > today) break;
-        const dateStr = d.toISOString().split('T')[0];
-        const isChecked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]).startsWith(dateStr));
+        const dateStr = getLocalDateString(d); // FIXED
+        const isChecked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
         grid.innerHTML += `<div class="heat-box ${isChecked?'filled':''}" title="${dateStr}"></div>`;
     }
 }
