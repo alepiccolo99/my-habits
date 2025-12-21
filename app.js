@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRbSlMIzyd-3hAzirBIkQub8CnYriwoAIhBbNvOwnhNeKWrM80IEy0J7NrZLWqET9K_g/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykgK5BCw0HyiNnk-M5webXjuTV4wXzx4brJmaRmOrlug661Xrw0cFlW-d3pkuIOQWnjw/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
@@ -91,10 +91,7 @@ function renderHabitDashboard() {
             ${days.map(d => {
                 const dateStr = getLocalDateString(d);
                 const checked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
-                // LOGIC CHANGE: X if empty/unchecked, ✔ if checked
-                const symbol = checked ? '✔' : '✕';
-                const className = checked ? 'checked' : '';
-                return `<div class="cell ${className}" onclick="toggleHabit('${id}', '${dateStr}', this)">${symbol}</div>`;
+                return `<div class="cell ${checked ? 'checked' : ''}" onclick="toggleHabit('${id}', '${dateStr}', this)">${checked ? '✔' : ''}</div>`;
             }).join('')}
         </div>`;
     }).join('');
@@ -105,10 +102,10 @@ function renderHabitDashboard() {
 async function toggleHabit(id, dateStr, el) {
     const isChecked = el.classList.contains('checked');
     
-    // Optimistic UI Update (Swap symbols)
+    // Optimistic UI
     if (isChecked) {
         el.classList.remove('checked');
-        el.innerText = '✕';
+        el.innerText = '';
         appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]) === dateStr));
     } else {
         el.classList.add('checked');
@@ -260,7 +257,10 @@ function renderCalendar(id) {
 }
 
 // --- SETTINGS ---
-function openSettings() { document.getElementById('settings-modal').style.display = 'block'; document.getElementById('themeColorPicker').value = currentTheme; }
+function openSettings() { 
+    document.getElementById('settings-modal').style.display = 'block'; 
+    document.getElementById('themeColorPicker').value = currentTheme; 
+}
 function openAddHabitModal() { document.getElementById('newHabitName').value = ""; document.getElementById('add-habit-modal').style.display = 'block'; }
 
 function updateThemeFromPicker(color) { 
@@ -272,6 +272,11 @@ function updateThemeFromPicker(color) {
 function applyTheme(color) {
     currentTheme = color; 
     document.documentElement.style.setProperty('--accent-color', color);
+    
+    // Update the visual circle in settings
+    const circle = document.getElementById('color-visual-circle');
+    if(circle) circle.style.backgroundColor = color;
+
     if(color.startsWith('#') && color.length === 7) {
         const r = parseInt(color.substr(1,2), 16); 
         const g = parseInt(color.substr(3,2), 16); 
