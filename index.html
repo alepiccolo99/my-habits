@@ -15,11 +15,12 @@
 
     <div class="main-container">
         <header>
-            <button class="icon-btn" onclick="openSettings()" title="Theme Settings">
-                <svg id="header-drop-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <div class="color-btn-wrapper" title="Change Theme Color">
+                <svg id="header-drop-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                     <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
                 </svg>
-            </button>
+                <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
+            </div>
             
             <h1>Habits</h1>
             
@@ -99,26 +100,20 @@
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
             </div>
-        </div>
-    </div>
 
-    <div id="settings-modal" class="modal">
-        <div class="modal-header">
-            <button class="btn-text" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
-            <h2>Settings</h2>
-            <div style="width:50px"></div>
-        </div>
-        <div class="modal-content">
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-size:16px; font-weight:600; margin-bottom:4px;">Accent Color</div>
-                    <div style="font-size:12px; color:var(--text-secondary);">Select a color to update the theme.</div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; font-size:16px;">History</h3>
+                    <select id="heatmap-select" style="width:auto; padding:8px 24px 8px 10px; margin:0; font-size:14px;" onchange="renderHeatmap()">
+                        <option value="30">Last Month</option>
+                        <option value="90">Last 3 Months</option>
+                        <option value="365">Last Year</option>
+                        <option value="all">All Time</option>
+                    </select>
                 </div>
-                <div class="color-btn-wrapper">
-                    <svg id="color-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-color)"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
-                    <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
-                </div>
+                <div class="heatmap-grid" id="heatmap-grid"></div>
             </div>
+
         </div>
     </div>
 
