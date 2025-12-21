@@ -27,33 +27,27 @@ header {
 }
 header h1 { font-size: 20px; font-weight: 700; margin: 0; }
 
-/* Color Picker Button Wrapper (Header) */
-.color-btn-wrapper {
-    position: relative;
-    width: 32px; height: 32px;
-    background: #3a3a3c; /* Dark Gray Circle */
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-    cursor: pointer;
-}
-.color-btn-wrapper input[type="color"] {
-    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    opacity: 0; cursor: pointer;
-}
-#header-drop-icon { color: var(--accent-color); }
-
-/* Add Button */
-.add-btn-circle {
-    background-color: #3a3a3c; 
+/* Circular Header Buttons (Used for both Color Picker and Add) */
+.header-btn-circle {
+    background-color: #3a3a3c; /* Dark Gray */
     width: 32px; height: 32px;
     border-radius: 50%;
     border: none;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
+    position: relative; /* For the input overlay */
+    overflow: hidden;
     transition: background 0.2s;
 }
-.add-btn-circle:active { background-color: #48484a; }
+.header-btn-circle:active { background-color: #48484a; }
+
+/* Hidden Color Input Overlay */
+#headerThemePicker {
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    opacity: 0; cursor: pointer;
+}
+/* Drop Icon Styling */
+#header-drop-icon { color: var(--accent-color); filter: drop-shadow(0 0 4px rgba(0,0,0,0.4)); }
 
 /* Grid & Layout */
 .main-container { padding: 10px 16px 40px 16px; max-width: 600px; margin: 0 auto; }
@@ -86,7 +80,7 @@ header h1 { font-size: 20px; font-weight: 700; margin: 0; }
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
 }
 
-/* Cells (Ticks & Crosses) */
+/* Cells */
 .day-col-header { text-align: center; color: var(--text-secondary); }
 .day-name { font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .day-num { font-size: 14px; }
@@ -104,31 +98,35 @@ header h1 { font-size: 20px; font-weight: 700; margin: 0; }
     transition: transform 0.1s;
     user-select: none;
 }
-.cell.checked { 
-    color: var(--accent-color); 
-    font-weight: 400; 
-}
+.cell.checked { color: var(--accent-color); font-weight: 400; }
 .cell:active { transform: scale(0.9); }
 
-/* UI Elements */
-.card { background: var(--bg-card); padding: 16px; border-radius: var(--card-radius); margin-bottom: 16px; }
-.transparent-card { background: transparent; padding: 0; }
-
+/* Inputs & Select */
 select { 
     width: 100%; padding: 12px; background: var(--bg-input); border: none; border-radius: 10px; color: #fff; margin-bottom: 10px; box-sizing: border-box; font-size: 16px;
-    appearance: none; -webkit-appearance: none;
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%238e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
-    background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
 }
 input { width: 100%; padding: 12px; background: var(--bg-input); border: none; border-radius: 10px; color: #fff; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
 .input-row { display: flex; gap: 10px; }
 
+/* Modals & Cards */
+.modal { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; overflow-y: auto; }
+.modal-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; background: #000; position: sticky; top: 0; }
+.modal-content { padding: 20px; max-width: 600px; margin: 0 auto; }
+.card { background: var(--bg-card); padding: 16px; border-radius: var(--card-radius); margin-bottom: 16px; }
+.transparent-card { background: transparent; padding: 0; }
+
+/* Buttons */
 .btn-primary { background: var(--accent-color); color: #000; border: none; border-radius: 30px; padding: 14px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; }
 .btn-delete { background: transparent; color: #ff453a; border: 1px solid #ff453a; border-radius: 30px; padding: 14px; width: 100%; font-weight: 600; margin-top: 10px; }
 .btn-text { background: none; border: none; color: var(--text-primary); font-size: 16px; cursor: pointer; }
 .btn-text-gray { background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer; padding: 0 10px; }
 
-/* Stats & Calendar */
+/* Stats, Calendar, Heatmap */
 .stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
 .stat-card { flex: 1; background: var(--bg-card); padding: 12px; border-radius: 12px; text-align: center; }
 .stat-val { font-size: 22px; font-weight: 700; color: var(--accent-color); }
@@ -140,18 +138,8 @@ input { width: 100%; padding: 12px; background: var(--bg-input); border: none; b
 .cal-day.active { background: var(--accent-color); color: #000; font-weight: bold; }
 .cal-day.today { border: 1px solid var(--accent-color); }
 
-/* Heatmap */
-.heatmap-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(12px, 1fr)); 
-    gap: 4px; 
-    margin-top: 10px; 
-}
-.heat-box { 
-    aspect-ratio: 1; 
-    background: var(--bg-input); 
-    border-radius: 2px; 
-}
+.heatmap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14px, 1fr)); gap: 4px; }
+.heat-box { aspect-ratio: 1; background: var(--bg-input); border-radius: 3px; }
 .heat-box.filled { background: var(--accent-color); }
 
 /* Loading */
