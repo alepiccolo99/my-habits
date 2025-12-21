@@ -3,84 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Life Tracker</title>
+    <title>Habit Tracker</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <div class="loading-text">Loading Data...</div>
     </div>
-
-    <div id="sidebar" class="sidebar">
-        <div class="profile-section">
-            <div class="avatar">AP</div>
-            <div class="profile-info">
-                <div class="name">Alessandro Piccolo</div>
-                <div class="username">@alepiccolo99</div>
-            </div>
-        </div>
-        <nav>
-            <button id="nav-habits" onclick="router('habits')" class="nav-btn active">Habits</button>
-            <button id="nav-health" onclick="router('health')" class="nav-btn">Health</button>
-            <button id="nav-workout" onclick="router('workout')" class="nav-btn">Workout</button>
-            <button id="nav-diet" onclick="router('diet')" class="nav-btn">Diet</button>
-            <button id="nav-settings" onclick="router('settings')" class="nav-btn" style="margin-top:auto">Settings</button>
-        </nav>
-    </div>
-
-    <div id="overlay" onclick="toggleSidebar()"></div>
 
     <div class="main-container">
         <header>
-            <button id="menuBtn" onclick="toggleSidebar()">☰</button>
-            <h1 id="page-title">Habits</h1>
-            <div id="header-action"></div> 
+            <button class="icon-btn" onclick="openSettings()" title="Settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <h1>Habits</h1>
+            <button class="icon-btn" onclick="openAddHabitModal()" title="Add Habit" style="color:var(--accent-color); font-size: 28px; font-weight: 300;">
+                +
+            </button>
         </header>
 
-        <section id="habits-view" class="view active-view">
+        <div id="habits-view">
             <div class="card transparent-card">
                 <div id="week-header" class="days-row"></div>
                 <div id="habits-list"></div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <section id="health-view" class="view">
-            <div class="card transparent-card">
-                <div id="health-week-header" class="days-row"></div>
-                <div id="health-list"></div>
-            </div>
-        </section>
-
-        <section id="workout-view" class="view"><div class="card"><h3>Workout Log</h3><p>Coming soon...</p></div></section>
-        <section id="diet-view" class="view"><div class="card"><h3>Diet Log</h3><p>Coming soon...</p></div></section>
-
-        <section id="settings-view" class="view">
+    <div id="add-habit-modal" class="modal">
+        <div class="modal-header">
+            <button class="btn-text" onclick="document.getElementById('add-habit-modal').style.display='none'">Cancel</button>
+            <h2>New Habit</h2>
+            <div style="width:50px"></div>
+        </div>
+        <div class="modal-content">
             <div class="card">
-                <h3>App Theme</h3>
-                <div class="color-picker-wrapper">
-                    <label class="btn-picker">
-                        Pick Color
-                        <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)">
-                    </label>
-                    <div style="display: flex; align-items: center; justify-content: flex-start; margin-top: 15px; color: var(--text-secondary);">
-                        Picked color: <span id="color-preview-box" class="color-preview-box" style="margin-left: 10px;"></span>
-                    </div>
+                <input type="text" id="newHabitName" placeholder="Habit Name">
+                <div class="input-row">
+                    <select id="newHabitFreq"><option value="Daily">Daily</option><option value="Weekly">Weekly</option></select>
+                    <input type="number" id="newHabitTarget" value="1" placeholder="Target">
                 </div>
+                <button class="btn-primary" onclick="handleAddHabit()">Create</button>
             </div>
-        </section>
+        </div>
     </div>
 
     <div id="habit-detail-modal" class="modal">
         <div class="modal-header">
-            <button class="btn-secondary" onclick="closeHabitModal()">Back</button>
+            <button class="btn-text" onclick="closeHabitModal()">Back</button>
             <h2 id="modal-habit-title">Habit</h2>
-            <button class="btn-secondary" onclick="toggleEditHabit()">Edit</button>
+            <button class="btn-text" style="color:var(--accent-color)" onclick="toggleEditHabit()">Edit</button>
         </div>
         <div class="modal-content">
             <div id="habit-edit-form" class="card" style="display:none; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                <h3>Edit Habit</h3>
+                <h3>Edit Details</h3>
                 <input type="text" id="edit-name" placeholder="Name">
                 <div class="input-row">
                     <select id="edit-freq">
@@ -89,109 +66,40 @@
                     </select>
                     <input type="number" id="edit-target" placeholder="Target">
                 </div>
-                <button class="btn-primary" onclick="saveHabitConfig()">Save Changes</button>
-                <button class="btn-secondary" style="width:100%; margin-top:10px; color:#ff453a!important" onclick="deleteCurrentHabit()">Archive Habit</button>
+                <button class="btn-primary" onclick="saveHabitConfig()">Save</button>
+                <button class="btn-delete" onclick="deleteCurrentHabit()">Delete Habit</button>
             </div>
             
             <div class="stats-row">
                 <div class="stat-card"><div class="stat-val" id="stat-streak">0</div><div class="stat-label">Streak</div></div>
-                <div class="stat-card"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Check-ins</div></div>
-                <div class="stat-card"><div class="stat-val" id="stat-rate">0%</div><div class="stat-label">Completion</div></div>
+                <div class="stat-card"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Total</div></div>
+                <div class="stat-card"><div class="stat-val" id="stat-rate">0%</div><div class="stat-label">Month</div></div>
             </div>
 
             <div class="card">
-                <div class="calendar-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <button class="btn-text-gray" onclick="changeCalendarMonth(-1)" style="font-size:24px; padding:0 15px;">&#8249;</button>
-                    <h3 id="cal-month-name" style="margin:0; width:230px; text-align:center;">Month</h3>
-                    <button class="btn-text-gray" onclick="changeCalendarMonth(1)" style="font-size:24px; padding:0 15px;">&#8250;</button>
+                <div class="calendar-header">
+                    <button onclick="changeCalendarMonth(-1)">&#8249;</button>
+                    <h3 id="cal-month-name">Month</h3>
+                    <button onclick="changeCalendarMonth(1)">&#8250;</button>
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
             </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h3 style="margin:0; font-size:18px">History</h3>
-                    <select id="heatmap-select" onchange="renderHeatmap(null)">
-                        <option value="3months">Last 3 Months</option>
-                        <option value="year">Last Year</option>
-                        <option value="all">All Time</option>
-                    </select>
-                </div>
-                <div class="heatmap-grid" id="heatmap-grid"></div>
-            </div>
         </div>
     </div>
 
-    <div id="health-detail-modal" class="modal">
+    <div id="settings-modal" class="modal">
         <div class="modal-header">
-            <button class="btn-secondary" onclick="closeHealthModal()">Back</button>
-            <h2 id="modal-health-title">Metric</h2>
-            <button class="btn-secondary" onclick="toggleEditHealth()">Edit</button>
-        </div>
-        <div class="modal-content">
-             <div id="health-edit-form" class="card" style="display:none; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                <h3>Edit Metric</h3>
-                <input type="text" id="edit-health-name" placeholder="Name">
-                <div class="input-row">
-                    <input type="text" id="edit-health-unit" placeholder="Unit (e.g. kg)">
-                    <input type="number" id="edit-health-goal" placeholder="Goal Value">
-                </div>
-                <button class="btn-primary" onclick="saveHealthConfig()">Save Changes</button>
-                <button class="btn-secondary" style="width:100%; margin-top:10px; color:#ff453a!important" onclick="deleteCurrentHealth()">Archive Metric</button>
-            </div>
-
-            <div class="stats-row">
-                <div class="stat-card"><div class="stat-val" id="health-avg">0</div><div class="stat-label">Average</div></div>
-                <div class="stat-card"><div class="stat-val" id="health-min">0</div><div class="stat-label">Min</div></div>
-                <div class="stat-card"><div class="stat-val" id="health-max">0</div><div class="stat-label">Max</div></div>
-            </div>
-
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h3 style="margin:0; font-size:18px">Trends</h3>
-                    <select id="chart-range-select" onchange="renderHealthChart()">
-                        <option value="week">Last Week</option>
-                        <option value="month" selected>Last Month</option>
-                        <option value="year">Last Year</option>
-                        <option value="all">All Time</option>
-                    </select>
-                </div>
-                <div id="health-chart-container" class="chart-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="add-habit-modal" class="modal" style="display:none; z-index: 2100;">
-        <div class="modal-header">
-            <button class="btn-secondary" onclick="document.getElementById('add-habit-modal').style.display='none'">Cancel</button>
-            <h2>New Habit</h2>
+            <button class="btn-text" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
+            <h2>Settings</h2>
             <div style="width:50px"></div>
         </div>
         <div class="modal-content">
             <div class="card">
-                <input type="text" id="newHabitName" placeholder="Name (e.g. Read Book)">
-                <div class="input-row">
-                    <select id="newHabitFreq"><option value="Daily">Daily</option></select>
-                    <input type="number" id="newHabitTarget" value="1">
+                <h3>Accent Color</h3>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="themeColorPicker" onchange="updateThemeFromPicker(this.value)" style="height:50px; padding:0;">
                 </div>
-                <button class="btn-primary" onclick="handleAddHabit()">Create Habit</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="add-health-modal" class="modal" style="display:none; z-index: 2100;">
-        <div class="modal-header">
-            <button class="btn-secondary" onclick="document.getElementById('add-health-modal').style.display='none'">Cancel</button>
-            <h2>New Metric</h2>
-            <div style="width:50px"></div>
-        </div>
-        <div class="modal-content">
-            <div class="card">
-                <input type="text" id="newHealthName" placeholder="Name (e.g. Steps)">
-                <div class="input-row">
-                    <input type="text" id="newHealthUnit" placeholder="Unit (e.g. km)">
-                    <input type="number" id="newHealthGoal" placeholder="Goal (optional)">
-                </div>
-                <button class="btn-primary" onclick="handleAddHealth()">Create Metric</button>
+                <p style="color:#666; font-size:12px; margin-top:10px;">Select a color to update the theme.</p>
             </div>
         </div>
     </div>
