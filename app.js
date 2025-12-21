@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRbSlMIzyd-3hAzirBIkQub8CnYriwoAIhBbNvOwnhNeKWrM80IEy0J7NrZLWqET9K_g/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJvhxX4W1UIHTw7CdKZt6a9-Ii-V5c6aqPqwOnDjNpncD3HtkBEPNcMLKzteHQ5FgXQw/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], healthMetrics: [], healthLogs: [], settings: [] };
@@ -122,9 +122,13 @@ async function toggleHabit(id, date, el) {
     const isChecked = el.classList.contains('checked');
     el.classList.toggle('checked');
     el.innerText = isChecked ? '✕' : '✔';
+    
+    // Optimistic Update
     await sendData({ action: 'toggleHabit', habitId: id, date: date });
+    
     if(isChecked) appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]).startsWith(date)));
     else appData.habitLogs.push([id, date, 1]);
+    
     if(document.getElementById('habit-detail-modal').style.display === 'block') { renderHabitStats(id); renderCalendar(id); renderHeatmap(id); }
 }
 
@@ -134,7 +138,7 @@ function renderHealthDashboard() {
     const list = document.getElementById('health-list');
     const header = document.getElementById('health-week-header');
     
-    // Safety check for metrics array
+    // Filter active metrics (index 4 is archived)
     const validMetrics = (appData.healthMetrics || []).filter(m => m[0] && m[1] && m[4] !== true);
 
     if (validMetrics.length === 0) {
@@ -166,6 +170,7 @@ function renderHealthDashboard() {
 }
 
 function getHealthValue(metricId, dateStr) {
+    // HealthLogs: [date, metricId, value]
     const log = appData.healthLogs.find(l => String(l[1]) === String(metricId) && String(l[0]).startsWith(dateStr));
     return log ? log[2] : null;
 }
@@ -176,12 +181,15 @@ async function promptLogHealth(id, dateStr) {
     
     if (newVal !== null && newVal.trim() !== "") {
         const numVal = parseFloat(newVal);
+        
+        // Optimistic Update
         let logIndex = appData.healthLogs.findIndex(l => String(l[1]) === String(id) && String(l[0]).startsWith(dateStr));
         if (logIndex > -1) {
             appData.healthLogs[logIndex][2] = numVal;
         } else {
             appData.healthLogs.push([dateStr, id, numVal, ""]);
         }
+        
         renderHealthDashboard();
         
         await sendData({ action: 'logHealth', metricId: id, date: dateStr, value: numVal });
@@ -218,6 +226,7 @@ function toggleEditHealth() {
 }
 
 function renderHealthStats(id) {
+    // Logs: [date, metricId, value]
     const logs = appData.healthLogs.filter(l => String(l[1]) === String(id)).map(l => parseFloat(l[2]));
     
     let avg = 0, min = 0, max = 0;
@@ -249,7 +258,7 @@ function renderHealthChart(id) {
     const dataPoints = appData.healthLogs
         .filter(l => String(l[1]) === String(id))
         .map(l => ({ date: new Date(l[0]), val: parseFloat(l[2]) }))
-        .filter(d => d.date >= cutoff)
+        .filter(d => d.date >= cutoff && !isNaN(d.val))
         .sort((a,b) => a.date - b.date);
 
     if (dataPoints.length < 2) {
@@ -257,40 +266,52 @@ function renderHealthChart(id) {
         return;
     }
 
+    // Determine Scales
     let yMin = Math.min(...dataPoints.map(d => d.val));
     let yMax = Math.max(...dataPoints.map(d => d.val));
     if (goal) {
         yMin = Math.min(yMin, goal);
         yMax = Math.max(yMax, goal);
     }
+    // Add padding to Y axis
     const padding = (yMax - yMin) * 0.1;
     yMin -= padding; if(yMin < 0) yMin = 0;
     yMax += padding;
+    if(yMax === yMin) yMax += 1; // Prevent division by zero
 
     const w = container.offsetWidth;
     const h = container.offsetHeight;
     const xPad = 30; 
     const yPad = 20; 
 
+    // Helper to map values to SVG coordinates
     const getX = (date) => xPad + ((date - dataPoints[0].date) / (dataPoints[dataPoints.length-1].date - dataPoints[0].date)) * (w - xPad - 10);
-    const getY = (val) => h - yPad - ((val - yMin) / (yMax - yMin)) * (h - yPad - 10);
+    const getY = (val) => h - yPad - ((val - yMin) / (yMax - yMin)) * (h - yPad * 2);
 
+    // Build SVG Path
     let dPath = `M ${getX(dataPoints[0].date)} ${getY(dataPoints[0].val)}`;
     dataPoints.slice(1).forEach(p => {
         dPath += ` L ${getX(p.date)} ${getY(p.val)}`;
     });
 
     let svg = `<svg viewBox="0 0 ${w} ${h}">`;
+    
+    // Draw Goal Line
     if (goal) {
         const yGoal = getY(goal);
         svg += `<line x1="${xPad}" y1="${yGoal}" x2="${w}" y2="${yGoal}" class="chart-goal-line" />`;
         svg += `<text x="${w-5}" y="${yGoal-5}" text-anchor="end" class="chart-text">Goal: ${goal}</text>`;
     }
+
+    // Draw Trend Line
     svg += `<path d="${dPath}" class="chart-line" />`;
+    
+    // Draw Axis Labels
     svg += `<text x="${xPad}" y="${h-5}" class="chart-text">${dataPoints[0].date.toLocaleDateString(undefined, {month:'short', day:'numeric'})}</text>`;
     svg += `<text x="${w-30}" y="${h-5}" class="chart-text">${dataPoints[dataPoints.length-1].date.toLocaleDateString(undefined, {month:'short', day:'numeric'})}</text>`;
     svg += `<text x="0" y="${getY(yMax)+5}" class="chart-text">${Math.round(yMax)}</text>`;
     svg += `<text x="0" y="${getY(yMin)}" class="chart-text">${Math.round(yMin)}</text>`;
+    
     svg += `</svg>`;
     container.innerHTML = svg;
 }
