@@ -26,7 +26,7 @@ body {
 .habit-row, .days-row { 
     display: grid; 
     grid-template-columns: 1fr repeat(5, 40px); 
-    gap: 0; /* Gap handled by internal padding/margins if needed */
+    gap: 0; 
     margin-bottom: 10px; 
     align-items: center;
     background-color: var(--bg-card);
@@ -63,7 +63,7 @@ body {
     font-size: 12px; 
     font-weight: 600; 
     color: var(--text-primary);
-    background: var(--bg-input); /* Slight bg to differentiate numbers */
+    background: var(--bg-input); 
     color: var(--accent-color);
 }
 .cell-value.empty { background: transparent; color: var(--text-muted); }
