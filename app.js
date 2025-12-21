@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuAj2iTlHP510PvzEIwJL9H1Nazuc-yF_iqVTE5zbpwssbBLfjqsoditVI9FIfxGoygQ/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNP-tJIfSIL6FMMHudGIycIWPLTdZAuviMoG33LpX1FWck9A29YRbteecd0SWFJKKzSQ/exec"; 
 const TOKEN = "aleLifeTracker_1999";
 
 let appData = { habits: [], habitLogs: [], settings: [] };
@@ -26,14 +26,12 @@ async function fetchData() {
         const resp = await fetch(`${SCRIPT_URL}?token=${TOKEN}&action=getAll`);
         const data = await resp.json();
         
-        // Sanitize Dates immediately
         if(data.habitLogs) {
             data.habitLogs.forEach(row => { row[1] = String(row[1]).split('T')[0]; });
         }
         
         appData = data;
         
-        // Apply Theme
         const savedTheme = data.settings.find(s => s[0] === 'theme');
         if (savedTheme && savedTheme[1]) applyTheme(savedTheme[1]);
         
@@ -62,7 +60,6 @@ function renderHabitDashboard() {
     const list = document.getElementById('habits-list');
     const header = document.getElementById('week-header');
     
-    // Valid Habits
     const habits = appData.habits || [];
 
     if (habits.length === 0) {
@@ -73,7 +70,6 @@ function renderHabitDashboard() {
     const days = getRecentDays(5);
     const todayStr = getLocalDateString(new Date()); 
     
-    // Header
     header.innerHTML = '<div></div>' + days.map(d => {
         const dStr = getLocalDateString(d);
         const isToday = dStr === todayStr;
@@ -83,7 +79,6 @@ function renderHabitDashboard() {
                 </div>`;
     }).join('');
 
-    // List
     list.innerHTML = habits.map(h => {
         const [id, name] = h;
         return `<div class="habit-row">
@@ -91,7 +86,6 @@ function renderHabitDashboard() {
             ${days.map(d => {
                 const dateStr = getLocalDateString(d);
                 const checked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
-                // FIXED: '✔' (Check Mark) for done, '✕' (Multiplication X) for empty
                 const symbol = checked ? '✔' : '✕';
                 return `<div class="cell ${checked ? 'checked' : ''}" onclick="toggleHabit('${id}', '${dateStr}', this)">${symbol}</div>`;
             }).join('')}
@@ -104,21 +98,20 @@ function renderHabitDashboard() {
 async function toggleHabit(id, dateStr, el) {
     const isChecked = el.classList.contains('checked');
     
-    // Optimistic UI - Toggle Symbol
     if (isChecked) {
         el.classList.remove('checked');
-        el.innerText = '✕'; // Back to gray cross
+        el.innerText = '✕';
         appData.habitLogs = appData.habitLogs.filter(l => !(String(l[0]) === String(id) && String(l[1]) === dateStr));
     } else {
         el.classList.add('checked');
-        el.innerText = '✔'; // To colored tick
+        el.innerText = '✔';
         appData.habitLogs.push([id, dateStr, 1]);
     }
     
     await sendData({ action: 'toggleHabit', habitId: id, date: dateStr });
     
     if(document.getElementById('habit-detail-modal').style.display === 'block') {
-        renderHabitStats(id); renderCalendar(id);
+        renderHabitStats(id); renderCalendar(id); renderHeatmap(id);
     }
 }
 
@@ -157,13 +150,10 @@ async function saveHabitConfig() {
 
 async function deleteCurrentHabit() {
     if(!confirm("Delete this habit and ALL its history? This cannot be undone.")) return;
-    
     appData.habits = appData.habits.filter(h => String(h[0]) !== String(currentHabitId));
     appData.habitLogs = appData.habitLogs.filter(l => String(l[0]) !== String(currentHabitId));
-    
     closeHabitModal();
     renderHabitDashboard();
-    
     await sendData({ action: 'deleteHabit', id: currentHabitId });
 }
 
@@ -185,6 +175,7 @@ function openHabitDetail(id) {
     
     renderHabitStats(id);
     renderCalendar(id);
+    renderHeatmap(id);
 }
 
 function closeHabitModal() { document.getElementById('habit-detail-modal').style.display = 'none'; renderHabitDashboard(); }
@@ -206,7 +197,6 @@ function renderHabitStats(id) {
         limit--;
     }
     document.getElementById('stat-streak').innerText = streak;
-    
     const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const recent = logs.filter(d => d >= getLocalDateString(thirtyDaysAgo));
     document.getElementById('stat-rate').innerText = Math.round((recent.length / 30) * 100) + "%";
@@ -234,29 +224,48 @@ function renderCalendar(id) {
     }
 }
 
-// --- SETTINGS ---
-function openSettings() { 
-    document.getElementById('settings-modal').style.display = 'block'; 
-    document.getElementById('themeColorPicker').value = currentTheme; 
-    // No need to set icon color here, it's bound to CSS variable
+function renderHeatmap(id) {
+    if(!id) id = currentHabitId;
+    const rangeVal = document.getElementById('heatmap-select').value;
+    const grid = document.getElementById('heatmap-grid');
+    grid.innerHTML = '';
+
+    const today = new Date();
+    let startDate = new Date();
+
+    if (rangeVal === '30') startDate.setDate(today.getDate() - 30);
+    else if (rangeVal === '90') startDate.setDate(today.getDate() - 90);
+    else if (rangeVal === '365') startDate.setDate(today.getDate() - 365);
+    else if (rangeVal === 'all') startDate = new Date('2024-01-01'); // Fixed start for "All Time" simplicity
+
+    const diffTime = Math.abs(today - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    for(let i=0; i<=diffDays; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        const dateStr = getLocalDateString(d);
+        const isChecked = appData.habitLogs.some(l => String(l[0]) === String(id) && String(l[1]) === dateStr);
+        grid.innerHTML += `<div class="heat-box ${isChecked?'filled':''}" title="${dateStr}"></div>`;
+    }
 }
+
+// --- THEME ---
 function openAddHabitModal() { document.getElementById('newHabitName').value = ""; document.getElementById('add-habit-modal').style.display = 'block'; }
 
 function updateThemeFromPicker(color) { 
     applyTheme(color); 
     localStorage.setItem('theme', color); 
-    // Icon updates automatically via CSS
     sendData({ action: 'saveSetting', key: 'theme', value: color }); 
 }
 
 function applyTheme(color) {
     currentTheme = color; 
     document.documentElement.style.setProperty('--accent-color', color);
-    // Update header icon color explicitly if needed (though CSS handles it)
+    
+    // Update icons
     const headerDrop = document.getElementById('header-drop-icon');
     if(headerDrop) headerDrop.style.color = color;
-    const settingsDrop = document.getElementById('color-icon');
-    if(settingsDrop) settingsDrop.style.color = color;
 
     if(color.startsWith('#') && color.length === 7) {
         const r = parseInt(color.substr(1,2), 16); 
